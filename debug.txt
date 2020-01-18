@@ -1,6 +1,8 @@
-/*
+// message of followed
 <li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">David W</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says Hello</span></li>
+// message of followed announcing 1nd
 <li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">David W</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says - One and Done in AAPL!</span></li>
+// message of followed announcing 1nd
 <li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">David W</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says - Mark-V on TSLA! Whoop</span></li>
+// message of not followed announcing Mark-V
 <li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">Martin</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says - Mark-V on TSLA! Whoop</span></li>
-*/
