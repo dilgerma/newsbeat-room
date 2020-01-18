@@ -75,7 +75,9 @@ var mutationObserver = new MutationObserver(function(mutations) {
   var elements = arr.filter(node => !!!node.getAttribute("processed") && followed.indexOf(node.childNodes[4].innerText) !== -1);
   elements.forEach(element => {
   element.setAttribute("style","border:1px solid black;background-color:red;color:white");
-  beepSound.play();
+  if(playBeep) {
+    beepSound.play();
+  }
 });
 
 //find all elements with strategies
