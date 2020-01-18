@@ -1,8 +1,26 @@
+/**
+ * IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
+ * PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
+ * CHARITY. CHILD CANCER PREFERRED - EVERY $ HELPS.
+ * 
+ * This script might evolve, feel free to check here and there for new versions at
+ * https://raw.githubusercontent.com/dilgerma/newsbeat-room/master/newsbeat.js
+ * 
+ * authored by Martin Dilger
+ * 
+ * Happy Trading make money.
+ */
+
 
 // below are audio files
 var followed = ["Cathie",  "Amy Harry","Mark M", "Gary Lundy", "Cindy Morgan", 'Patrick Hawe', 'boogie', 'David W'];
-var playStrategies = false;
-var playBeep = false;
+var playStrategies = true;
+var playBeep = true;
+//call out everytime someone mentions a strategy or only on people you follow (true means all callouts)
+var callAllStrategies = false;
+
+var followColor = "yellow";
+var strategyColor = "green";
 
 var beepSound = new Audio("data:audio/mp4;base64,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");
 document.body.appendChild(beepSound);
@@ -74,7 +92,7 @@ var mutationObserver = new MutationObserver(function(mutations) {
 //find all elements with observed people
   var elements = arr.filter(node => !!!node.getAttribute("processed") && followed.indexOf(node.childNodes[4].innerText) !== -1);
   elements.forEach(element => {
-  element.setAttribute("style","border:1px solid black;background-color:red;color:white");
+  element.setAttribute("style",`border:1px solid black;background-color:${followColor};color:white`);
   if(playBeep) {
     beepSound.play();
   }
@@ -86,12 +104,14 @@ var mutationObserver = new MutationObserver(function(mutations) {
     if (matching) {
       var strategy = strategieArr.find(elem => elem.matcher.indexOf(strategy) !== -1);
       if (strategy && playStrategies) {
-        strategy.sound.play();
+        if(callAllStrategies || (!callAllStrategies && followed.indexOf(node.childNodes[4].innerText) !== -1)) {
+          strategy.sound.play();
+        }
       }
     }
     return matching;
   }));
-  strategiesElements.forEach(element => element.setAttribute("style","border:1px solid black;background-color:green;color:white !important"));
+  strategiesElements.forEach(element => element.setAttribute("style",`border:1px solid black;background-color:${strategyColor};color:white !important`));
   arr.forEach(e => e.setAttribute("processed", true))
 });
 
@@ -100,3 +120,12 @@ mutationObserver.observe(document.getElementsByClassName("chat-body")[0], {
   childList: true,
   subtree: true
 });
+
+console.log("Script applied. It worked. Feel free to close your Dev Tools. You need to apply the script, whenever you open your Browser or Reload.")
+
+/*
+<li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">David W</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says Hello</span></li>
+<li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">David W</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says - One and Done in AAPL!</span></li>
+<li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">David W</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says - Mark-V on TSLA! Whoop</span></li>
+<li class="chat-message chat-message-presenter"><span class="chat-message-timestamp"><!-- react-text: 1000 -->[<!-- /react-text --><!-- react-text: 1001 -->11:18pm<!-- /react-text --><!-- react-text: 1002 -->]<!-- /react-text --></span><!-- react-text: 1003 --> <!-- /react-text --><span class="chat-message-username">Martin</span><span class="chat-message-username">:</span><!-- react-text: 1006 --> <!-- /react-text --><span class="chat-message-text">David says - Mark-V on TSLA! Whoop</span></li>
+*/
