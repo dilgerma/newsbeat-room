@@ -41,34 +41,52 @@ Use this script at your own Risk please.
 const followed = [
   "Cathie",
   "Amy Harry",
-  "Mark M",
   "Gary Lundy",
   "Cindy Morgan",
   "Patrick Hawe",
+  "Emily",
   "boogie",
   "David W"
 ];
+
+const highlightKeywords = ["upgrade", "downgrade", "price target", "raised", "lowered", "tesla"];
+
+
+//input fields
+const fieldFollowedPeopleInputId = 'field_follow';
+const fieldHighlightInputId = 'field_highlight';
+const fieldPlayAllCheckBoxId = 'field_play_all';
+const fieldPlayBeep = 'field_play_beep';
+const fieldCallStrategies = 'field_call_strategies';
+const fieldFollowerColor = 'field_follower_color';
+const fieldHightlightColor = 'field_highlight_color';
+const fieldStrategyColor = 'field_strategy_color';
+
 const playStrategiesSound = true;
 const playBeep = true;
 //sound check if the script applied succesfully (saying 'Happy Trading make money')
-const playSoundCheck = false;
+const playSoundCheck = true;
 //call out everytime someone mentions a strategy or only on people you follow (true means all callouts)
 const onlyMarkAndCallStrategiesOfFollowedPeople = false;
 
 // here you can define, what color should be displayed for someone you follow
-const followColor = "yellow";
+const followColor = "#ffff00";
 const followTextColor = "black";
 
 // here you can define, what color should be displayed for an announced strategy like Mark-V
-const strategyColor = "green";
-const strategyTextColor = "white";
+const strategyColor = "#ffa500";
+const strategyTextColor = "black";
 
-// here you can define, what color should be displayed for an announced support or resistance
-const supportResistanceEnabled = false;
-const supportResistanceColor = "aqua";
-const supportResistanceTextColor = "black";
-//only populated if toggle is true
-var supportAndResistanceNode;
+// // here you can define, what color should be displayed for an announced support or resistance
+// const supportResistanceEnabled = true;
+// const supportResistanceColor = "aqua";
+// const supportResistanceTextColor = "black";
+// //only populated if toggle is true
+// var supportAndResistanceNode;
+
+//just add keywords you want to have highlighted
+const highlightColor = "#CCCCCC";
+const highlightTextColor = "black";
 
 const beepSound = new Audio(
   "data:audio/mp4;base64,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AJtYoIwgATn+5to+JGb3tkgbOZqoNsea3YZ1dV6WHykTnqwPBd87UQFOHA41PIDPTEhqoiGFSSWPY+NCgwHCiKG6XgrznYWO+EvYUHM46Dpaqona4w2cA0QSCr5NAAdh0/8UpMJhEmFBfXI1+CnayGCGjYPwPnC0qDM8rgS6eL9IshKaBnYY7EohVL6YR5ASwHkPCA4hDBSNjhTFRZFNAGcBLCImbmlsAAZEFSG0hGfavEtB8HkHpHrC4ZpFV8yZKQ1Fpl6UdIdVeMqU3lT1VsY9aLTO0k1ry0zd3iz8e1b+Ofo3Cvxjv9SHoyZLRlYVrlgFA7h0iEqgXHbEcdxwqXSbLOyYTPYBeyVNIH3IOZCDf6Pm4BWDUIyngbiGCYfv+yY6Kk06v5OON6xVm5xvaQWj0KJOJHfYnamHroJ9jzZBoENAYxs5Y5IuxUxkoQiGVAiEBCIDJWXoKsWDGQwtVJ1yDwT0bLfE7bwsnHNElnjagqhJIywW1aWbNGk/SyDJSYcpmEKxxj0thzWX/tl99B2/wzPXYby7tRPJlCJ4YpBJIIcDaqGpsZGKlNg4yBGdFZAUBUqIOcWLTRXSjES/lYaY4J5ucCMlO3R20SkBJ5kzcfzWDCy4NPNvd00TdHQtnmpwMsInNg04Bc7Eu0tyr1aD+HAawA2/lM4AAAGjZYiEABT//veIHzLLb5xq13IR560urR9Q7kZxXqS9/iAAAAMAAAMAAAMAAAMAAVdth4fbgPDOjooAAAMAAAMAARkAAAMAMqAAABGgAAALeAAAB9AAAAZIAAAHEAAAB/AAAAmQAAAQ0AAAICAAADFAAAB2AAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAgMAAABEQZokbEE//qpVAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADA1YAAABAQZ5COIJfAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAAEnQAAAEABnmE0QR8AAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAMAAAaEAAAAQAGeY2pBHwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAABoUAAABJQZpnSahBaJlMCCP//qmWAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAANCQAAAEJBnoUuUTBL/wAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAAAwAABJ0AAABAAZ6mbkEfAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAADAAAGhQ=="
@@ -188,27 +206,104 @@ mutationObserver.observe(document.getElementsByClassName("chat-body")[0], {
   subtree: true
 });
 
-if (supportResistanceEnabled) {
-  supportAndResistanceNode = prepareSupportAndResistanceWindow();
-}
+const supportAndResistanceNode = prepareSupportAndResistanceWindow();
+
 
 function prepareSupportAndResistanceWindow() {
   const resistanceContainer = document.createElement("div");
   resistanceContainer.setAttribute("class", "grid-item");
 
   const headline = document.createElement("div");
-  headline.setAttribute(
-    "style",
-    "grid-column-start:0; grid-column-end:3 span 2;padding: 16px; font-weight: 500; box-sizing: border-box; position: relative; white-space: nowrap; height: 50px; background-color: green; color:white"
-  );
+  const body = document.createElement("div");
+  
   resistanceContainer.appendChild(headline);
-  headline.innerHTML = "Support / Resistance Chatter (no NewsBeat Feature)";
+  resistanceContainer.appendChild(body);
+
+  const headerTemplate = `
+  <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
+  NewsBeat Script (unofficial)</span>
+  <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
+  </div>
+  <button tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>
+  `;
+
+  headline.innerHTML = headerTemplate;
+
+  const template = `
+  <form>
+  
+  <div>
+      People following: <input style="width:100%" id="field_follow" type="text" placeholder="Followed people comma separated">
+  </div>
+  <div>
+      Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="Highlights comma separated">
+  </div>
+  <div>
+      Play beep? <input id="field_play_beep" type="checkbox">
+  </div>
+  <div>
+      Call out Strategies? <input id="field_call_strategies" type="checkbox">
+  </div>
+  <div>
+      Mark Strategies of People I follow? (uncheck for all mentions) <input id="field_play_all" type="checkbox">
+  </div>
+  <div>
+  Highlight-Color <input id="field_highlight_color" type="color" value="${highlightColor}">
+</div>
+<div>
+  Follower-Color <input id="field_follower_color" type="color" value="${followColor}">
+</div>
+<div>
+  Strategy-Color <input id="field_strategy_color" type="color" value=${strategyColor}>
+</div>
+
+</form>`;
 
   document
     .getElementsByClassName("cards-container")[0]
     .appendChild(resistanceContainer);
 
+    body.innerHTML = template;
+
   return resistanceContainer;
+}
+
+document.getElementById(fieldFollowedPeopleInputId).value = followed.reduce((acc, followed)=>`${acc},${followed}`);
+document.getElementById(fieldHighlightInputId).value = highlightKeywords.reduce((acc, highlighted)=>`${acc},${highlighted}`);
+document.getElementById(fieldPlayBeep).checked = playBeep;
+document.getElementById(fieldCallStrategies).checked = playStrategiesSound;
+document.getElementById(fieldPlayAllCheckBoxId).checked = onlyMarkAndCallStrategiesOfFollowedPeople;
+
+function getFollowedPeople() {
+  return document.getElementById(fieldFollowedPeopleInputId).value.split(",");
+}
+
+function getHighlights() {
+  return document.getElementById(fieldHighlightInputId).value.split(",");
+}
+
+function isBeepEnabled() {
+  return document.getElementById(fieldPlayBeep).checked;
+}
+
+function isCalloutStrategies() {
+  return document.getElementById(fieldCallStrategies).checked;
+}
+
+function isCallOutStrategiesOfEverybody() {
+  return document.getElementById(fieldPlayAllCheckBoxId).checked;
+}
+
+function getHighlightColor() {
+  return document.getElementById(fieldHightlightColor).value;
+}
+
+function getFollowerColor() {
+  return document.getElementById(fieldFollowerColor).value;
+}
+
+function getStrategyColor() {
+  return document.getElementById(fieldStrategyColor).value;
 }
 
 //parse a chat message
@@ -233,22 +328,22 @@ function process(mutations) {
 
   //find all elements with observed people
   const allNewMessagesOfFollowedPeople = allNewMessages.filter(
-    msg => followed.indexOf(msg.name) !== -1
+    msg => getFollowedPeople().indexOf(msg.name) !== -1
   );
 
   // all messages get a hightlight
   allNewMessagesOfFollowedPeople.forEach(msg => {
     msg.domNode.setAttribute(
       "style",
-      `border:1px solid black;background-color:${followColor};color:${followTextColor}`
+      `border:1px solid black;background-color:${getFollowerColor()};color:${followTextColor}`
     );
-    if (playBeep) {
+    if (isBeepEnabled()) {
       beepSound.play();
     }
   });
 
   //find all elements with strategies
-  const messagesToProcess = onlyMarkAndCallStrategiesOfFollowedPeople
+  const messagesToProcess = isCallOutStrategiesOfEverybody()
     ? allNewMessagesOfFollowedPeople
     : allNewMessages;
 
@@ -263,7 +358,7 @@ function process(mutations) {
         const matchingStrategy = strategyArr.find(
           elem => elem.matcher.indexOf(strategyString) !== -1
         );
-        if (matchingStrategy && playStrategiesSound && !firstRun) {
+        if (matchingStrategy && isCalloutStrategies() && !firstRun) {
           matchingStrategy.sound.play();
         }
       }
@@ -274,33 +369,46 @@ function process(mutations) {
   strategyMentions.forEach(msg => {
     msg.domNode.setAttribute(
       "style",
-      `border:1px solid black;background-color:${strategyColor};color:${strategyTextColor} !important`
+      `border:1px solid black;background-color:${getStrategyColor()};color:${strategyTextColor} !important`
     );
   });
 
-  //parse for support / resistance
-  if (supportResistanceEnabled) {
-    messagesToProcess
-      .filter(msg =>
-        supportResistanceKeyWords.some(keyword =>
-          new RegExp(keyword, "i").test(msg.text)
-        )
-      )
-      .forEach(msgThatMentionsSupportOrResistance => {
-        //
-        if (supportAndResistanceNode) {
-          const clonedNode = msgThatMentionsSupportOrResistance.domNode.cloneNode(
-            true
-          );
-          clonedNode.setAttribute(
-            "style",
-            `border:1px solid black;background-color:${supportResistanceColor};color:${supportResistanceTextColor} !important`
-          );
-          clonedNode.setAttribute("processed", true);
-          supportAndResistanceNode.appendChild(clonedNode);
-        }
-      });
-  }
+  // //parse for support / resistance
+  // if (supportResistanceEnabled) {
+  //   messagesToProcess
+  //     .filter(msg =>
+  //       supportResistanceKeyWords.some(keyword =>
+  //         new RegExp(keyword, "i").test(msg.text)
+  //       )
+  //     )
+  //     .forEach(msgThatMentionsSupportOrResistance => {
+  //       //
+  //       if (supportAndResistanceNode) {
+  //         const clonedNode = msgThatMentionsSupportOrResistance.domNode.cloneNode(
+  //           true
+  //         );
+  //         clonedNode.setAttribute(
+  //           "style",
+  //           `border:1px solid black;background-color:${supportResistanceColor};color:${supportResistanceTextColor} !important`
+  //         );
+  //         clonedNode.setAttribute("processed", true);
+  //         supportAndResistanceNode.appendChild(clonedNode);
+  //       }
+  //     });
+  // }
+
+  //highlights
+  allNewMessages
+    .filter(msg =>
+      getHighlights().some(keyword => new RegExp(keyword, "i").test(msg.text))
+    )
+    .forEach(messageToHighlight => {
+      //
+      messageToHighlight.domNode.setAttribute(
+        "style",
+        `border:1px solid black;background-color:${getHighlightColor()};color:${highlightTextColor} !important`
+      );
+    });
 
   //mark messages as processed
   allNewMessages.forEach(msg => msg.domNode.setAttribute("processed", true));
