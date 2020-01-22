@@ -49,7 +49,7 @@ const followed = [
   "David W"
 ];
 
-const highlightKeywords = ["upgrade", "downgrade", "price target", "raised", "lowered", "tesla"];
+const highlightKeywords = ["upgrade", "downgrade", "pricetarget", "raised", "lowered"];
 
 
 //input fields
@@ -70,7 +70,7 @@ const playSoundCheck = true;
 const onlyMarkAndCallStrategiesOfFollowedPeople = false;
 
 // here you can define, what color should be displayed for someone you follow
-const followColor = "#ffff00";
+const followColor = "#E8FE23";
 const followTextColor = "black";
 
 // here you can define, what color should be displayed for an announced strategy like Mark-V
@@ -85,7 +85,7 @@ const strategyTextColor = "black";
 // var supportAndResistanceNode;
 
 //just add keywords you want to have highlighted
-const highlightColor = "#CCCCCC";
+const highlightColor = "#FEC29F";
 const highlightTextColor = "black";
 
 const beepSound = new Audio(
