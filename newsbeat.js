@@ -335,7 +335,7 @@ function process(mutations) {
   allNewMessagesOfFollowedPeople.forEach(msg => {
     msg.domNode.setAttribute(
       "style",
-      `border:1px solid black;background-color:${getFollowerColor()};color:${followTextColor}`
+      `background-color:${getFollowerColor()};color:${followTextColor}`
     );
     if (isBeepEnabled()) {
       beepSound.play();
@@ -369,7 +369,7 @@ function process(mutations) {
   strategyMentions.forEach(msg => {
     msg.domNode.setAttribute(
       "style",
-      `border:1px solid black;background-color:${getStrategyColor()};color:${strategyTextColor} !important`
+      `background-color:${getStrategyColor()};color:${strategyTextColor} !important`
     );
   });
 
@@ -406,7 +406,7 @@ function process(mutations) {
       //
       messageToHighlight.domNode.setAttribute(
         "style",
-        `border:1px solid black;background-color:${getHighlightColor()};color:${highlightTextColor} !important`
+        `background-color:${getHighlightColor()};color:${highlightTextColor} !important`
       );
     });
 
