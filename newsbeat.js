@@ -61,6 +61,7 @@ const fieldCallStrategies = 'field_call_strategies';
 const fieldFollowerColor = 'field_follower_color';
 const fieldHightlightColor = 'field_highlight_color';
 const fieldStrategyColor = 'field_strategy_color';
+const fieldMarkerColor = 'field_marker_color'; 
 
 const playStrategiesSound = true;
 const playBeep = true;
@@ -76,6 +77,10 @@ const followTextColor = "black";
 // here you can define, what color should be displayed for an announced strategy like Mark-V
 const strategyColor = "#ffa500";
 const strategyTextColor = "black";
+
+// here you can define how markers are displayed
+const markerColor = "#00ffbf"
+const markerTextColor = "black";
 
 // // here you can define, what color should be displayed for an announced support or resistance
 // const supportResistanceEnabled = true;
@@ -256,6 +261,9 @@ function prepareSupportAndResistanceWindow() {
 <div>
   Strategy-Color <input id="field_strategy_color" type="color" value=${strategyColor}>
 </div>
+<div>
+  Marker-Color <input id="${fieldMarkerColor}" type="color" value=${markerColor}>
+</div>
 
 </form>`;
 
@@ -306,6 +314,10 @@ function getStrategyColor() {
   return document.getElementById(fieldStrategyColor).value;
 }
 
+function getMarkerColor() {
+  return document.getElementById(fieldMarkerColor).value;
+}
+
 //parse a chat message
 function parseEntry(chatMessageNode) {
   return {
@@ -314,6 +326,10 @@ function parseEntry(chatMessageNode) {
     processed: !!chatMessageNode.getAttribute("processed"),
     domNode: chatMessageNode
   };
+}
+
+function dblClickHandler(evt) {
+  evt.target.setAttribute("style",  `background-color:${getMarkerColor()};color:${markerTextColor}`);
 }
 
 function process(mutations) {
@@ -325,6 +341,8 @@ function process(mutations) {
   const messages = chatMessageDomNodes.map(parseEntry);
 
   const allNewMessages = messages.filter(message => !message.processed);
+
+  allNewMessages.forEach(message => message.domNode.ondblclick = dblClickHandler);
 
   //find all elements with observed people
   const allNewMessagesOfFollowedPeople = allNewMessages.filter(
