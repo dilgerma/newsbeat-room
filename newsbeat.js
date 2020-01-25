@@ -62,6 +62,10 @@ const fieldFollowerColor = 'field_follower_color';
 const fieldHightlightColor = 'field_highlight_color';
 const fieldStrategyColor = 'field_strategy_color';
 const fieldMarkerColor = 'field_marker_color'; 
+const fieldHideTray = 'field_hide_tray';
+const fieldHideForm = 'field_hide_form';
+
+
 
 const playStrategiesSound = true;
 const playBeep = true;
@@ -204,6 +208,13 @@ const allValidStrategyStrings = strategyArr.reduce(
   []
 );
 
+const hideTray = function(){
+  const tray = document.getElementsByClassName("minimized-content");
+  if(tray.length > 0) {
+    tray[0].style.setProperty("display", "none");
+  }
+}
+
 var mutationObserver = new MutationObserver(process);
 
 mutationObserver.observe(document.getElementsByClassName("chat-body")[0], {
@@ -215,21 +226,23 @@ const supportAndResistanceNode = prepareSupportAndResistanceWindow();
 
 
 function prepareSupportAndResistanceWindow() {
-  const resistanceContainer = document.createElement("div");
-  resistanceContainer.setAttribute("class", "grid-item");
+
+  const formContainer = document.createElement("div");
+  formContainer.setAttribute("id","field_form_container");
+  formContainer.setAttribute("class", "grid-item");
 
   const headline = document.createElement("div");
   const body = document.createElement("div");
   
-  resistanceContainer.appendChild(headline);
-  resistanceContainer.appendChild(body);
+  formContainer.appendChild(headline);
+  formContainer.appendChild(body);
 
   const headerTemplate = `
   <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
   NewsBeat Script (unofficial)</span>
   <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
   </div>
-  <button tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>
+  <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>
   `;
 
   headline.innerHTML = headerTemplate;
@@ -264,16 +277,20 @@ function prepareSupportAndResistanceWindow() {
 <div>
   Marker-Color <input id="${fieldMarkerColor}" type="color" value=${markerColor}>
 </div>
+<div>
+  Hide Tray <input id="${fieldHideTray}" type="checkbox">
+</div>
 
 </form>`;
 
+
+
   document
     .getElementsByClassName("cards-container")[0]
-    .appendChild(resistanceContainer);
+    .appendChild(formContainer);
 
     body.innerHTML = template;
-
-  return resistanceContainer;
+  return formContainer;
 }
 
 document.getElementById(fieldFollowedPeopleInputId).value = followed.reduce((acc, followed)=>`${acc},${followed}`);
@@ -281,6 +298,10 @@ document.getElementById(fieldHighlightInputId).value = highlightKeywords.reduce(
 document.getElementById(fieldPlayBeep).checked = playBeep;
 document.getElementById(fieldCallStrategies).checked = playStrategiesSound;
 document.getElementById(fieldPlayAllCheckBoxId).checked = onlyMarkAndCallStrategiesOfFollowedPeople;
+document.getElementById(fieldHideTray).addEventListener("change", hideTray);
+document.getElementById(fieldHideForm).addEventListener("click", ()=>{
+  document.getElementById("field_form_container").setAttribute("style", "display:none");
+});
 
 function getFollowedPeople() {
   return document.getElementById(fieldFollowedPeopleInputId).value.split(",");
