@@ -39,8 +39,11 @@ Apply the script: https://www.youtube.com/watch?v=Qxwl6F_pQQk
 
 Another video: https://youtu.be/jKQaadlFMso
 
-Direct Link to the Script:
+Direct Link to the latest version of the Script:
 https://raw.githubusercontent.com/dilgerma/newsbeat-room/master/newsbeat.js
+
+Older versions can be found here:
+https://github.com/dilgerma/newsbeat-room/releases
 
 ### If you are making money with this script
 I kindly ask to give something back and donate 5 or 10$ to charity. Child Cancer preferred, thank you very much.

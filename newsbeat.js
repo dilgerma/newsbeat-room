@@ -1,41 +1,44 @@
-/**
-                                                                 * 
-                                                                 * IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
-                                                                 * PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
-                                                                 * CHARITY. CHILD CANCER PREFERRED - EVERY $ HELPS.
-                                                                 * 
-                                                                 * This script might evolve, feel free to check here and there for new versions at
-                                                                 * https://raw.githubusercontent.com/dilgerma/newsbeat-room/master/newsbeat.js
-                                                                 * 
-                                                                 * authored by Martin Dilger
-                                                                 * 
-                                                                 * Happy Trading make money.
-                                                                 * 
-                                                                 * MIT License
+// VERSION 1.0.5
+/*
+IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
+PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
+CHARITY. CHILD CANCER PREFERRED - EVERY $ HELPS.
+                                                                    
+This script might evolve, feel free to check here and there for new versions at
+https://raw.githubusercontent.com/dilgerma/newsbeat-room/master/newsbeat.js
 
-                                                                Copyright (c) 2020 Martin Dilger
+Older versions can be found here:
+https://github.com/dilgerma/newsbeat-room/releases
+                                                                    
+authored by Martin Dilger
+                                                                    
+Happy Trading make money.
+                                                                    
+MIT License
 
-                                                                Permission is hereby granted, free of charge, to any person obtaining a copy
-                                                                of this software and associated documentation files (the "Software"), to deal
-                                                                in the Software without restriction, including without limitation the rights
-                                                                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-                                                                copies of the Software, and to permit persons to whom the Software is
-                                                                furnished to do so, subject to the following conditions:
+Copyright (c) 2020 Martin Dilger
 
-                                                                The above copyright notice and this permission notice shall be included in all
-                                                                copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-                                                                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-                                                                IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-                                                                FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-                                                                AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-                                                                LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-                                                                OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-                                                                SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-                                                                No Warranty. NEITHER PARTY MAKES ANY WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, BY FACT OR LAW, OTHER THAN THOSE EXPRESSLY SET FORTH IN THIS AGREEMENT. PATHEON MAKES NO WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE OR WARRANTY OF MERCHANTABILITY FOR THE PRODUCTS.
-                                                                Use this script at your own Risk please.
-                                                                */
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ No Warranty. NEITHER PARTY MAKES ANY WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, BY FACT OR LAW, OTHER THAN THOSE EXPRESSLY SET FORTH IN THIS AGREEMENT. PATHEON MAKES NO WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE OR WARRANTY OF MERCHANTABILITY FOR THE PRODUCTS.
+Use this script at your own Risk please.
+*/
 
 // below are audio files
 const followed = [
@@ -46,10 +49,10 @@ const followed = [
   "Patrick Hawe",
   "Emily",
   "boogie",
-  "David W"
+  "David W",
 ];
 //"Cathie", "Amy Harry", "Patrick Hawe"
-const collectedPeople = [];
+const collections = [];
 
 const highlightKeywords = [
   "upgrade",
@@ -58,8 +61,7 @@ const highlightKeywords = [
   "raised",
   "lowered",
   "swing",
-  "nvax",
-  "apt"
+  "SWEEP"
 ];
 
 //input fields
@@ -113,6 +115,7 @@ const highlightTextColor = "black";
 //collections
 // {'Martin' : []}
 const collection = {};
+var selectedCollection = ["None"];
 
 //sounds
 var marksTrade = new Audio(
@@ -228,13 +231,20 @@ const callOuts = [
     condition: isCallMarksTrades
   },
   {
-    matcher: msg => {
-      return getCollectedPeople().some(name => name == msg.name);
-    },
+    matcher: msg => getFollowedPeople().some(name => name == msg.name),
+    handler: msg => handleCollection(msg.name, msg),
+    condition: () => getFollowedPeople().length > 0
+  },
+  {
+    matcher: msg =>
+      getCollections().some(keyword => stringmatch(msg.text, keyword, "i")),
     handler: msg => {
-      handleCollection(msg);
+      const matchinKeyWord = getCollections().find(keyword =>
+        stringmatch(msg.text, keyword, "i")
+      );
+      handleCollection(matchinKeyWord, msg);
     },
-    condition: () => collectedPeople.length > 0
+    condition: () => getCollections().length > 0
   }
 ];
 
@@ -272,18 +282,18 @@ mutationObserver.observe(document.getElementsByClassName("chat-body")[0], {
 
 const supportAndResistanceNode = prepareSupportAndResistanceWindow();
 
-const handleCollection = msg => {
-  if (!document.getElementById(`collection_${msg.name}`)) {
-    prepareCollectionWindow(msg);
+const handleCollection = (key, msg) => {
+  if (!document.getElementById(`collection_window`)) {
+    prepareCollectionWindow(key, msg);
   }
 
-  if (collection[msg.name] !== undefined) {
-    collection[msg.name].push(msg);
+  if (collection[key] !== undefined) {
+    collection[key].push(msg);
   } else {
-    collection[msg.name] = [msg];
+    collection[key] = [msg];
   }
 
-  collection[msg.name].sort((first, second) => {
+  collection[key].sort((first, second) => {
     const matchesFirst = new RegExp("([0-9]+):([0-9]+)(pm|am)").exec(
       first.date
     );
@@ -291,14 +301,25 @@ const handleCollection = msg => {
       second.date
     );
 
+    /**
+     * nasty logic here.
+     *
+     * am before pm
+     * 12 to 12:59 is pm, then it continues with 1,2,3
+     * 11 to 11:69 is am
+     */
     const minutesFirst =
-      matchesFirst[1] * 60 +
-      matchesFirst[2] +
-      (matchesFirst[3] == "am" ? 100 : 1);
+      (Number.parseInt(matchesFirst[1]) != 12
+        ? Number.parseInt(matchesFirst[1]) * 60
+        : 1) +
+      Number.parseInt(matchesFirst[2]) +
+      (matchesFirst[3] == "am" ? 1 : 100000);
     const minutesSecond =
-      matchesSecond[1] * 60 +
-      matchesSecond[2] +
-      (matchesSecond[3] == "am" ? 100 : 1);
+      (Number.parseInt(matchesSecond[1]) != 12
+        ? Number.parseInt(matchesSecond[1]) * 60
+        : 1) +
+      Number.parseInt(matchesSecond[2]) +
+      (matchesSecond[3] == "am" ? 1 : 100000);
 
     if (minutesFirst == minutesSecond) {
       return 0;
@@ -310,30 +331,86 @@ const handleCollection = msg => {
     }
   });
 
-  const container = document.getElementById(`collection_id_list_${msg.name}`);
-  while (container.firstChild) {
-    container.removeChild(container.firstChild);
-  }
+  //prepare form radio choices
+  const node = document.getElementById("collection_form");
 
-  collection[msg.name].forEach(msg => {
+  removeAllElementsInNode(node);
+
+  const noneInput = createRadioElement(
+    "collectionSelect",
+    true,
+    "None",
+    "None"
+  );
+  noneInput.onclick = evt => {
+    if (evt.target.checked) {
+      document
+        .getElementById("collection_window")
+        .style.setProperty("display", "none");
+    }
+  };
+  node.appendChild(noneInput);
+
+  Object.keys(collection)
+    .sort()
+    .forEach(k => {
+      var radioInput = createRadioElement(
+        "collectionSelect",
+        k === selectedCollection,
+        k,
+        k
+      );
+      radioInput.setAttribute("value", k);
+      radioInput.onclick = evt => {
+        updateCollecions(evt.target.value);
+        document
+          .getElementById("collection_window")
+          .style.removeProperty("display");
+      };
+      node.appendChild(radioInput);
+    });
+};
+
+const updateCollecions = selection => {
+  selectedCollection = selection;
+  const container = document.getElementById(`collection_id_list`);
+  //remove all nodes, sorted ones will be reapplied
+  removeAllElementsInNode(container);
+
+  collection[selection].forEach(msg => {
     const node = document.createElement("div");
     node.setAttribute("processed", "true");
     const msgTemplate = `
-                                                                    <li class="chat-message" processed="true">
-                                                                      <span class="chat-message-timestamp">${msg.date}</span>
-                                                                      <span class="chat-message-username">${msg.name}</span>
-                                                                      <span class="chat-message-username">:</span>
-                                                                      <span class="chat-message-text">${msg.text}</span>
-                                                                    </li>`;
+                                                                      <li class="chat-message" processed="true">
+                                                                        <span class="chat-message-timestamp">${msg.date}</span>
+                                                                        <span class="chat-message-username">${msg.name}</span>
+                                                                        <span class="chat-message-username">:</span>
+                                                                        <span class="chat-message-text">${msg.text}</span>
+                                                                      </li>`;
     node.innerHTML = msgTemplate;
 
     container.appendChild(node);
   });
 };
 
-const prepareCollectionWindow = msg => {
+const createRadioElement = (name, checked, value, displayString) => {
+  const radioHtml = `<div><input type="radio" name="${name}" checked="${checked}" value="${value}">${displayString}</div>`;
+  var radioFragment = document.createElement("div");
+  radioFragment.innerHTML = radioHtml;
+
+  return radioFragment.firstChild;
+};
+
+const removeAllElementsInNode = node => {
+  while (node.firstChild) {
+    node.removeChild(node.firstChild);
+  }
+};
+
+const prepareCollectionWindow = (key, msg) => {
   const container = document.createElement("div");
-  container.setAttribute("id", `collection_${msg.name}`);
+  container.setAttribute("id", `collection_window`);
+  container.setAttribute("style", "display:none");
   container.setAttribute(
     "class",
     "grid-item full-height chat-card-grid-item collection-container"
@@ -361,7 +438,7 @@ const prepareCollectionWindow = msg => {
   list.setAttribute("class", "chat auto-scrolling");
 
   body.appendChild(list);
-  list.setAttribute("id", `collection_id_list_${msg.name}`);
+  list.setAttribute("id", `collection_id_list`);
 
   container.appendChild(headline);
   container.appendChild(bodyWrapper);
@@ -375,7 +452,6 @@ function prepareSupportAndResistanceWindow() {
   formContainer.setAttribute("class", "grid-item");
 
   const headline = document.createElement("div");
-  headline.setAttribute("class", "chat-header");
 
   const body = document.createElement("div");
 
@@ -383,57 +459,61 @@ function prepareSupportAndResistanceWindow() {
   formContainer.appendChild(body);
 
   const headerTemplateString = `
-   <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-   NewsBeat Script (unofficial)</span>
-  <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
-  </div>
-  <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
+    <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
+    NewsBeat Script 1.0.5 (unofficial)</span>
+    <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
+    </div>
+    <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
   headline.innerHTML = headerTemplateString;
 
   const template = `
-                                                                  <form>
-                                                                  
-                                                                  <div>
-                                                                      People following: <input style="width:100%" id="field_follow" type="text" placeholder="Followed people comma separated">
+                                                                    <form>
+                                                                    
+                                                                    <div>
+                                                                        People following: <input style="width:100%" id="field_follow" type="text" placeholder="Followed people comma separated">
+                                                                    </div>
+                                                                    <div>
+                                                                        Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="Highlights comma separated">
+                                                                    </div>
+                                                                    <div>
+                                                                      Collections <input style="width:100%" id="${fieldCollections}" type="text" placeholder="Terms you are interested in today - comma separated">
+                                                                    </div>
+                                                                    <div>
+                                                                      Which Collection to display?
+                                                                      <div id="collection_form"></div>
+                                                                    </div>
+                                                                    <div>
+                                                                        Play beep? <input id="field_play_beep" type="checkbox">
+                                                                    </div>
+                                                                    <div>
+                                                                        Call out Strategies? <input id="field_call_strategies" type="checkbox">
+                                                                    </div>
+                                                                    <div>
+                                                                        Hide Collections? <input id="${fieldHideCollections}" type="checkbox">
+                                                                    </div>
+                                                                    <div>
+                                                                        Only Mark & Call Strategies of People I follow? (uncheck for all mentions) <input id="field_play_all" type="checkbox">
+                                                                    </div>
+                                                                    <div>
+                                                                      Call Marks Trades <input id="${fieldCallMarksTrades}" type="checkbox">
+                                                                    </div>
+                                                                    <div>
+                                                                    Highlight-Color <input id="field_highlight_color" type="color" value="${highlightColor}">
                                                                   </div>
                                                                   <div>
-                                                                      Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="Highlights comma separated">
+                                                                    Follower-Color <input id="field_follower_color" type="color" value="${followColor}">
                                                                   </div>
                                                                   <div>
-                                                                    Collections <input style="width:100%" id="${fieldCollections}" type="text" placeholder="Collected People - comma separated">
+                                                                    Strategy-Color <input id="field_strategy_color" type="color" value=${strategyColor}>
                                                                   </div>
                                                                   <div>
-                                                                      Play beep? <input id="field_play_beep" type="checkbox">
+                                                                    Marker-Color <input id="${fieldMarkerColor}" type="color" value=${markerColor}>
                                                                   </div>
                                                                   <div>
-                                                                      Call out Strategies? <input id="field_call_strategies" type="checkbox">
+                                                                    Hide Tray <input id="${fieldHideTray}" type="checkbox">
                                                                   </div>
-                                                                  <div>
-                                                                      Hide Collections? <input id="${fieldHideCollections}" type="checkbox">
-                                                                  </div>
-                                                                  <div>
-                                                                      Only Mark & Call Strategies of People I follow? (uncheck for all mentions) <input id="field_play_all" type="checkbox">
-                                                                  </div>
-                                                                  <div>
-                                                                    Call Marks Trades <input id="${fieldCallMarksTrades}" type="checkbox">
-                                                                  </div>
-                                                                  <div>
-                                                                  Highlight-Color <input id="field_highlight_color" type="color" value="${highlightColor}">
-                                                                </div>
-                                                                <div>
-                                                                  Follower-Color <input id="field_follower_color" type="color" value="${followColor}">
-                                                                </div>
-                                                                <div>
-                                                                  Strategy-Color <input id="field_strategy_color" type="color" value=${strategyColor}>
-                                                                </div>
-                                                                <div>
-                                                                  Marker-Color <input id="${fieldMarkerColor}" type="color" value=${markerColor}>
-                                                                </div>
-                                                                <div>
-                                                                  Hide Tray <input id="${fieldHideTray}" type="checkbox">
-                                                                </div>
 
-                                                                </form>`;
+                                                                  </form>`;
 
   document
     .getElementsByClassName("cards-container")[0]
@@ -456,9 +536,13 @@ document.getElementById(
 ).checked = onlyMarkAndCallStrategiesOfFollowedPeople;
 document.getElementById(fieldHideTray).addEventListener("change", hideTray);
 document.getElementById(fieldCallMarksTrades).checked = callMarksTrades;
-document.getElementById(fieldCollections).value = collectedPeople.reduce(
-  (acc, highlighted) => `${acc},${highlighted}`
-);
+
+if (collections.length > 0) {
+  document.getElementById(fieldCollections).value = collections.reduce(
+    (acc, highlighted) => `${acc},${highlighted}`
+  );
+}
+
 document.getElementById(fieldHideCollections).checked = hideCollections;
 document
   .getElementById(fieldHideCollections)
@@ -486,8 +570,11 @@ function getHighlights() {
   return document.getElementById(fieldHighlightInputId).value.split(",");
 }
 
-function getCollectedPeople() {
-  return document.getElementById(fieldCollections).value.split(",");
+function getCollections() {
+  const value = document.getElementById(fieldCollections).value;
+  return value.length > 0
+    ? document.getElementById(fieldCollections).value.split(",")
+    : [];
 }
 
 function isBeepEnabled() {
