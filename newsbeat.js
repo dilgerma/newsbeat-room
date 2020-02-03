@@ -49,7 +49,7 @@ const followed = [
   "Patrick Hawe",
   "Emily",
   "boogie",
-  "David W",
+  "David W"
 ];
 //"Cathie", "Amy Harry", "Patrick Hawe"
 const collections = [];
@@ -573,7 +573,7 @@ function getHighlights() {
 function getCollections() {
   const value = document.getElementById(fieldCollections).value;
   return value.length > 0
-    ? document.getElementById(fieldCollections).value.split(",")
+    ? document.getElementById(fieldCollections).value.split(",").filter(entry => entry.trim().length > 0)
     : [];
 }
 
