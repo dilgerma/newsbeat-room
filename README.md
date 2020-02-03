@@ -33,11 +33,16 @@ Feel free to modify and adjust at your own liking.
 
 Just apply it if you are a member of the NewsBeat Room.
 
-Video showing what the Script can do:
+This script provides some useful features for the NewsBeat Live Room. 
 
-Apply the script: https://www.youtube.com/watch?v=Qxwl6F_pQQk
+Information can be found here:
+https://github.com/dilgerma/newsbeat-room
 
-Another video: https://youtu.be/jKQaadlFMso
+Here are some videos showing what the Script can do.
+Watch in order please.
+
+How to apply the script: https://youtu.be/iovNfUTbS30
+New Feature Collections: https://youtu.be/jKQaadlFMso
 
 Direct Link to the latest version of the Script:
 https://raw.githubusercontent.com/dilgerma/newsbeat-room/master/newsbeat.js
