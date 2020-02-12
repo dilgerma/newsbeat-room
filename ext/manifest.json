@@ -1,0 +1,37 @@
+{
+  "name": "NewsBeat Script",
+  "version": "1.0.5",
+  "manifest_version": 2,
+  "description": "Simple Script to hightlight stuff in the NewsBeat Room",
+  "homepage_url": "https://github.com/dilgerma/newsbeat-room",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "background": {
+    "scripts": [
+      "src/bg/background.js"
+    ],
+    "persistent": true
+  },
+  "page_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "page action demo"
+  },
+  "permissions": [
+    "tts",
+    "ttsEngine"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://vtf.t3live.com/room/newsbeatlive/*"
+      ],
+      "js": [
+        "src/inject/inject.js"
+      ]
+    }
+  ]
+}
