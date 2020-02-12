@@ -29,6 +29,11 @@ Only styling, highlighting and better readability.
 
 Feel free to modify and adjust at your own liking.
 
+## Chrome Extension
+
+Just load this file: [ext.zip](https://github.com/dilgerma/newsbeat-room/raw/master/ext.zip)
+Unzip it and apply the script like in the video below.
+
 ## Simple script
 
 Just apply it if you are a member of the NewsBeat Room.
