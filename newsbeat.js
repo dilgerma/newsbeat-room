@@ -1,4 +1,4 @@
-// VERSION 1.0.6
+// VERSION 1.0.7
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -41,22 +41,16 @@ Use this script at your own Risk please.
 */
 
 // below are audio files
-const followed = [
-];
+const followed = ["Mark M"];
 //"Cathie", "Amy Harry", "Patrick Hawe"
 const collections = [];
 
-const highlightKeywords = [
-  "upgrade",
-  "downgrade",
-  "pricetarget",
-  "raised",
-  "lowered",
-  "swing",
-  "SWEEP"
-];
+const highlightKeywords = [];
+
+const localStorageKey= 'newsBeatScript';
 
 //input fields
+const fieldReset = "field_reset";
 const fieldFollowedPeopleInputId = "field_follow";
 const fieldHighlightInputId = "field_highlight";
 const fieldPlayAllCheckBoxId = "field_play_all";
@@ -70,16 +64,15 @@ const fieldHideTray = "field_hide_tray";
 const fieldHideForm = "field_hide_form";
 const fieldCallMarksTrades = "field_marks_trades";
 const fieldCollections = "field_collections";
-const fieldHideCollections = "field_hide_collections";
+const fieldSilence = "field_silence";
 
 const callMarksTrades = true;
 const playStrategiesSound = true;
 const playBeep = true;
 //sound check if the script applied succesfully (saying 'Happy Trading make money')
-const playSoundCheck = true;
+const playSoundCheck = false;
 //call out everytime someone mentions a strategy or only on people you follow (true means all callouts)
 const onlyMarkAndCallStrategiesOfFollowedPeople = false;
-const hideCollections = false;
 
 // here you can define, what color should be displayed for someone you follow
 const followColor = "#E8FE23";
@@ -108,9 +101,35 @@ const highlightTextColor = "black";
 // {'Martin' : []}
 const collection = {};
 var selectedCollection = ["None"];
-const staticCollections = ["Trade:", "Idea:","Level:"];
+const staticCollections = [];
+
+const splitCommaSeparatedList = (list)=>{
+  return list.split(",").filter(elem => elem.length > 0).map(elem => elem.trim())
+}
+
+const parseBooleanString = (str) => {
+  return str.toLowerCase() == 'true' ? true : false;
+}
 
 //state 
+const readState = () => {
+  return localStorage && localStorage[localStorageKey] ? JSON.parse(localStorage[localStorageKey]) : {
+    [fieldPlayBeep] : true,
+    [fieldHideForm]: false,
+    [fieldCallStrategies]: playStrategiesSound,
+    [fieldCallMarksTrades]: true,
+    [fieldPlayAllCheckBoxId]: false,
+    [fieldHightlightColor]: highlightColor,
+    [fieldMarkerColor]: markerColor,
+    [fieldStrategyColor]: strategyColor,
+    [fieldFollowerColor]: followColor,
+    [fieldHighlightInputId]: highlightKeywords,
+    [fieldCollections]: collections,
+    [fieldFollowedPeopleInputId]: followed,
+    [fieldSilence] : false
+  };
+}
+const state = readState();
 
 //sounds
 var marksTrade = new Audio(
@@ -475,7 +494,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    NewsBeat Script 1.0.6 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.0.7 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -483,12 +502,14 @@ function prepareSupportAndResistanceWindow() {
 
   const template = `
                                                                     <form>
-                                                                    
+                                                                    <div>
+                                                                      <button id="${fieldReset}" type="button">Reset Settings</button>
+                                                                    </div>
                                                                     <div>
                                                                         People following: <input style="width:100%" id="field_follow" type="text" placeholder="example: Cathie,Amy Harry,Gary Lundy,Cindy Morgan">
                                                                     </div>
                                                                     <div>
-                                                                        Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="Highlights comma separated">
+                                                                        Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="upgrade,downgrade,Sweep">
                                                                     </div>
                                                                     <div>
                                                                       Collections <input style="width:100%" id="${fieldCollections}" type="text" placeholder="Terms you are interested in today - comma separated">
@@ -498,31 +519,31 @@ function prepareSupportAndResistanceWindow() {
                                                                       <div id="collection_form"></div>
                                                                     </div>
                                                                     <div>
-                                                                        Play beep? <input id="field_play_beep" type="checkbox">
+                                                                        Play beep? <input id="${fieldPlayBeep}" type="checkbox">
                                                                     </div>
                                                                     <div>
-                                                                        Call out Strategies? <input id="field_call_strategies" type="checkbox">
+                                                                        Call out Strategies? <input id="${fieldCallStrategies}" type="checkbox">
                                                                     </div>
                                                                     <div>
-                                                                        Hide Collections? <input id="${fieldHideCollections}" type="checkbox">
-                                                                    </div>
-                                                                    <div>
-                                                                        Only Mark & Call Strategies of People I follow? (uncheck for all mentions) <input id="field_play_all" type="checkbox">
+                                                                        Only Mark & Call Strategies of People I follow? (uncheck for all mentions) <input id="${fieldPlayAllCheckBoxId}" type="checkbox">
                                                                     </div>
                                                                     <div>
                                                                       Call Marks Trades <input id="${fieldCallMarksTrades}" type="checkbox">
                                                                     </div>
                                                                     <div>
-                                                                    Highlight-Color <input id="${fieldHightlightColor}" type="color" value="${highlightColor}">
+                                                                    Highlight-Color <input id="${fieldHightlightColor}" type="color" value="${getHighlightColor()}">
                                                                   </div>
                                                                   <div>
-                                                                    Follower-Color <input id="${fieldFollowerColor}" type="color" value="${followColor}">
+                                                                    Follower-Color <input id="${fieldFollowerColor}" type="color" value="${getFollowerColor()}">
                                                                   </div>
                                                                   <div>
-                                                                    Strategy-Color <input id="${fieldStrategyColor}" type="color" value=${strategyColor}>
+                                                                    Strategy-Color <input id="${fieldStrategyColor}" type="color" value=${getStrategyColor()}>
                                                                   </div>
                                                                   <div>
-                                                                    Marker-Color <input id="${fieldMarkerColor}" type="color" value=${markerColor}>
+                                                                    Marker-Color <input id="${fieldMarkerColor}" type="color" value=${getMarkerColor()}>
+                                                                  </div>
+                                                                  <div>
+                                                                    Silence <input id="${fieldSilence}" type="checkbox">
                                                                   </div>
                                                                   <div>
                                                                     Hide Tray <input id="${fieldHideTray}" type="checkbox">
@@ -538,39 +559,26 @@ function prepareSupportAndResistanceWindow() {
   return formContainer;
 }
 
-document.getElementById(fieldFollowedPeopleInputId).value = followed.length > 0 ? followed.reduce(
+
+document.getElementById(fieldReset).addEventListener("click", (evt)=>{
+  localStorage.removeItem(localStorageKey)
+});
+document.getElementById(fieldFollowedPeopleInputId).value = state[fieldFollowedPeopleInputId].length > 0 ? state[fieldFollowedPeopleInputId].reduce(
   (acc, followed) => `${acc},${followed}`
 ) : "";
-document.getElementById(fieldHighlightInputId).value = highlightKeywords.reduce(
+document.getElementById(fieldHighlightInputId).value = state[fieldHighlightInputId].length > 0 ? state[fieldHighlightInputId].reduce(
   (acc, highlighted) => `${acc},${highlighted}`
-);
-document.getElementById(fieldPlayBeep).checked = playBeep;
-document.getElementById(fieldCallStrategies).checked = playStrategiesSound;
-document.getElementById(
-  fieldPlayAllCheckBoxId
-).checked = onlyMarkAndCallStrategiesOfFollowedPeople;
+) : "";
+document.getElementById(fieldPlayBeep).checked = state[fieldPlayBeep];
+document.getElementById(fieldCallStrategies).checked = state[fieldCallStrategies];
+document.getElementById(fieldPlayAllCheckBoxId).checked = state[fieldPlayAllCheckBoxId];
+document.getElementById(fieldSilence).checked = state[fieldSilence];
 document.getElementById(fieldHideTray).addEventListener("change", hideTray);
-document.getElementById(fieldCallMarksTrades).checked = callMarksTrades;
+document.getElementById(fieldCallMarksTrades).checked = state[fieldCallMarksTrades]
 
-if (collections.length > 0) {
-  document.getElementById(fieldCollections).value = collections.reduce(
+document.getElementById(fieldCollections).value = state[fieldCollections].length > 0 ? state[fieldCollections].reduce(
     (acc, highlighted) => `${acc},${highlighted}`
-  );
-}
-
-document.getElementById(fieldHideCollections).checked = hideCollections;
-document
-  .getElementById(fieldHideCollections)
-  .addEventListener("change", evt => {
-    const nodes = [].slice.call(
-      document.getElementsByClassName("collection-container")
-    );
-    nodes.forEach(node => {
-      isHideCollections()
-        ? node.style.setProperty("display", "none")
-        : node.style.setProperty("display", "block");
-    });
-  });
+  ) : "";
 
 document.getElementById(fieldHideForm).addEventListener("click", () => {
   document
@@ -578,87 +586,116 @@ document.getElementById(fieldHideForm).addEventListener("click", () => {
     .setAttribute("style", "display:none");
 });
 
+const storeState = (state) => {
+  if (localStorage) {
+    localStorage[localStorageKey] = JSON.stringify(state);
+  }
+}
 
 //event listener
-document.getElementById(fieldFollowedPeopleInputId).addEventListener("change", ()=>{
+document.getElementById(fieldFollowedPeopleInputId).addEventListener("change", (evt)=>{
+  const content = evt.target.value;
+
+  const stateValue = content.length > 0 ? content.split(",").filter(elem => elem.length > 0).map(elem => elem.trim()) : []
+  state[fieldFollowedPeopleInputId]=stateValue;
+  storeState(state);
+  
 });
-document.getElementById(fieldHighlightInputId).addEventListener("change", ()=>{
+document.getElementById(fieldHighlightInputId).addEventListener("change", (evt)=>{
+  const content = evt.target.value;
+  state[fieldHighlightInputId] = content.split(",").map(entry => entry.trim()).filter(entry => entry.length > 0);
+  storeState(state);
+
 });
-document.getElementById(fieldCallStrategies).addEventListener("change", ()=>{
+document.getElementById(fieldCallStrategies).addEventListener("change", (evt)=>{
+  state[fieldCallStrategies] = evt.target.checked;
+  storeState(state);
 });
-document.getElementById(fieldPlayAllCheckBoxId).addEventListener("change", ()=>{
+document.getElementById(fieldPlayAllCheckBoxId).addEventListener("change", (evt)=>{
+  state[fieldPlayAllCheckBoxId] = evt.target.checked;
+  storeState(state);
 });
-document.getElementById(fieldHideTray).addEventListener("change", ()=>{
+document.getElementById(fieldHideTray).addEventListener("change", (evt)=>{
 });
-document.getElementById(fieldPlayBeep).addEventListener("change", ()=>{
+document.getElementById(fieldPlayBeep).addEventListener("change", (evt)=>{
+  state[fieldPlayBeep] = evt.target.checked;
+  storeState(state);
 });
-document.getElementById(fieldCallMarksTrades).addEventListener("change", ()=>{
+document.getElementById(fieldCallMarksTrades).addEventListener("change", (evt)=>{
+  state[fieldCallMarksTrades] = evt.target.checked;
+  storeState(state);
 });
-document.getElementById(fieldCollections).addEventListener("change", ()=>{
-});
-document.getElementById(fieldHideCollections).addEventListener("change", ()=>{
-});
-document.getElementById(fieldMarkerColor).addEventListener("change", ()=>{
-});
-document.getElementById(fieldHightlightColor).addEventListener("change", ()=>{
-});
-document.getElementById(fieldFollowerColor).addEventListener("change", ()=>{
-});
-document.getElementById(fieldStrategyColor).addEventListener("change", ()=>{
+document.getElementById(fieldCollections).addEventListener("change", (evt)=>{
+  const content = evt.target.value;
+  state[fieldCollections] = content.split(",").concat(staticCollections).map(entry => entry.trim()).map(escapeRegExp).filter(entry => entry.length > 0)
+  storeState(state);
 });
 
+document.getElementById(fieldMarkerColor).addEventListener("change", (evt)=>{
+  state[fieldMarkerColor] = evt.target.value;
+  storeState(state);
+});
+document.getElementById(fieldHightlightColor).addEventListener("change", (evt)=>{
+  state[fieldHightlightColor] = evt.target.value;
+  storeState(state);
+});
+document.getElementById(fieldFollowerColor).addEventListener("change", (evt)=>{
+  state[fieldFollowerColor] = evt.target.value;
+  storeState(state);
+});
+document.getElementById(fieldStrategyColor).addEventListener("change", (evt)=>{
+  state[fieldStrategyColor] = evt.target.value;
+  storeState(state);
+});
+document.getElementById(fieldSilence).addEventListener("change", (evt)=>{
+  state[fieldSilence] = evt.target.checked;
+  storeState(state);
+});
 
 
 
 function getFollowedPeople() {
-  return document.getElementById(fieldFollowedPeopleInputId).value.split(",").map(entry => entry.trim()).filter(entry => entry.length() > 0);
+  return state[fieldFollowedPeopleInputId];
 }
 
 function getHighlights() {
-  return document.getElementById(fieldHighlightInputId).value.split(",").map(entry => entry.trim()).filter(entry => entry.length > 0);
+  return state[fieldHighlightInputId];
 }
 
 function getCollections() {
-  const value = document.getElementById(fieldCollections).value;
-  return value.length > 0
-    ? document.getElementById(fieldCollections).value.split(",").concat(staticCollections).map(entry => entry.trim()).map(escapeRegExp).filter(entry => entry.length > 0)
-    : [];
+  return state[fieldCollections];
 }
 
 function isBeepEnabled() {
-  return document.getElementById(fieldPlayBeep).checked;
+  return !state[fieldSilence] && state[fieldPlayBeep];
 }
 
 function isCalloutStrategies() {
-  return document.getElementById(fieldCallStrategies).checked;
+  return !state[fieldSilence] && state[fieldCallStrategies];
 }
 
 function isCallOutStrategiesOfEverybody() {
-  return document.getElementById(fieldPlayAllCheckBoxId).checked;
+  return state[fieldPlayAllCheckBoxId];
 }
 
 function getHighlightColor() {
-  return document.getElementById(fieldHightlightColor).value;
+  return state[fieldHightlightColor];
 }
 
 function getFollowerColor() {
-  return document.getElementById(fieldFollowerColor).value;
+  return state[fieldFollowerColor];
 }
 
 function getStrategyColor() {
-  return document.getElementById(fieldStrategyColor).value;
+  return state[fieldStrategyColor];
 }
 
 function getMarkerColor() {
-  return document.getElementById(fieldMarkerColor).value;
+  return state[fieldMarkerColor];
 }
 
 function isCallMarksTrades() {
-  return document.getElementById(fieldCallMarksTrades).checked;
-}
-
-function isHideCollections() {
-  return document.getElementById(fieldHideCollections).checked;
+  return !state[fieldSilence] && state[fieldCallMarksTrades];
 }
 
 //parse a chat message

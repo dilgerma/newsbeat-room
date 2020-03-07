@@ -31,8 +31,8 @@ Feel free to modify and adjust at your own liking.
 
 ## Chrome Extension
 
-How to apply the extension: https://youtu.be/Z-Clnsj1tA0
-
+How to apply the extension: https://youtu.be/Z-Clnsj1tA06
+6
 Just load this file: [ext.zip](https://github.com/dilgerma/newsbeat-room/raw/master/ext.zip)
 Unzip it and apply the script like in the video below.
 
