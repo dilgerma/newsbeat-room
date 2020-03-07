@@ -43,7 +43,7 @@ Use this script at your own Risk please.
 // below are audio files
 const followed = [
   "Cathie",
-  "Amy Harry",
+  "Scary",
   "Gary Lundy",
   "Cindy Morgan",
   "Patrick Hawe",
@@ -116,6 +116,7 @@ const highlightTextColor = "black";
 // {'Martin' : []}
 const collection = {};
 var selectedCollection = ["None"];
+const staticCollections = ["Trade:", "Idea:","Level:"];
 
 //sounds
 var marksTrade = new Audio(
@@ -265,7 +266,7 @@ const callOuts = [
       handleCollection(matchinKeyWord, msg);
     },
     condition: () => getCollections().length > 0
-  }
+  },
 ];
 
 function escapeRegExp(string) {
@@ -583,17 +584,17 @@ document.getElementById(fieldHideForm).addEventListener("click", () => {
     .setAttribute("style", "display:none");
 });
 function getFollowedPeople() {
-  return document.getElementById(fieldFollowedPeopleInputId).value.split(",");
+  return document.getElementById(fieldFollowedPeopleInputId).value.split(",").map(entry => entry.trim()).filter(entry => entry.length() > 0);
 }
 
 function getHighlights() {
-  return document.getElementById(fieldHighlightInputId).value.split(",");
+  return document.getElementById(fieldHighlightInputId).value.split(",").map(entry => entry.trim()).filter(entry => entry.length > 0);
 }
 
 function getCollections() {
   const value = document.getElementById(fieldCollections).value;
   return value.length > 0
-    ? document.getElementById(fieldCollections).value.split(",").filter(entry => entry.trim().length > 0)
+    ? document.getElementById(fieldCollections).value.split(",").concat(staticCollections).map(entry => entry.trim()).map(escapeRegExp).filter(entry => entry.length > 0)
     : [];
 }
 
@@ -652,7 +653,7 @@ function dblClickHandler(evt) {
 }
 
 function stringmatch(text, keyword, flags) {
-  return new RegExp(keyword, flags).test(escapeRegExp(text));
+  return new RegExp(keyword, flags).test(escapeRegExp(text.trim()));
 }
 
 function process(mutations) {
