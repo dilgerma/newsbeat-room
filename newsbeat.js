@@ -42,14 +42,6 @@ Use this script at your own Risk please.
 
 // below are audio files
 const followed = [
-  "Cathie",
-  "Scary",
-  "Gary Lundy",
-  "Cindy Morgan",
-  "Patrick Hawe",
-  "Emily",
-  "boogie",
-  "David W"
 ];
 //"Cathie", "Amy Harry", "Patrick Hawe"
 const collections = [];
@@ -491,7 +483,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     <form>
                                                                     
                                                                     <div>
-                                                                        People following: <input style="width:100%" id="field_follow" type="text" placeholder="Followed people comma separated">
+                                                                        People following: <input style="width:100%" id="field_follow" type="text" placeholder="example: Cathie,Amy Harry,Gary Lundy,Cindy Morgan">
                                                                     </div>
                                                                     <div>
                                                                         Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="Highlights comma separated">
