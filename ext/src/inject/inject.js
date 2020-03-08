@@ -15,7 +15,8 @@ function initializeInterval() {
 }
 
 function script() {
-  // VERSION 1.0.9
+
+ // VERSION 1.1.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -70,7 +71,7 @@ const localStorageKey= 'newsBeatScript';
 const fieldReset = "field_reset";
 const fieldFollowedPeopleInputId = "field_follow";
 const fieldHighlightInputId = "field_highlight";
-const fieldPlayAllCheckBoxId = "field_play_all";
+const fieldPlayOnlyOfFollowed = "field_play_all";
 const fieldPlayBeep = "field_play_beep";
 const fieldCallStrategies = "field_call_strategies";
 const fieldFollowerColor = "field_follower_color";
@@ -199,7 +200,7 @@ const readState = () => {
     [fieldHideForm]: false,
     [fieldCallStrategies]: playStrategiesSound,
     [fieldCallMarksTrades]: true,
-    [fieldPlayAllCheckBoxId]: false,
+    [fieldPlayOnlyOfFollowed]: false,
     [fieldHightlightColor]: highlightColor,
     [fieldMarkerColor]: markerColor,
     [fieldStrategyColor]: strategyColor,
@@ -307,10 +308,21 @@ const allValidStrategyStrings = strategyArr.reduce(
  */
 const messageProcessors = [
   {
-    name: "callout strategies",
+    name: "callout all strategies",
     matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")),
     handler: msg => calloutStrategy(msg),
-    condition: isCalloutStrategies
+    condition: ()=> !firstRun && isCalloutStrategies() && isCallOutStrategiesOfEverybody()
+  },
+  {
+    name: "callout strategies of followed people",
+    matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")) && getFollowedPeople().some(name => msg.name == name),
+    handler: msg => calloutStrategy(msg),
+    condition: ()=> !firstRun &&  isCalloutStrategies() && !isCallOutStrategiesOfEverybody()
+  },
+  {
+    name: "highligh strategies",
+    matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")),
+    handler: msg => msg.domNode.setAttribute("style",`background-color:${getStrategyColor()};color:${strategyTextColor} !important`),
   },
   {
     name: "callout Marks Trades",
@@ -318,7 +330,7 @@ const messageProcessors = [
       return msg.name == "David W" && stringmatch(msg.text, "MARK'S TRADE");
     },
     handler: msg => {
-      marksTrade.play();
+      speakText("Marks Trade")
     },
     condition: isCallMarksTrades
   },
@@ -531,7 +543,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.0.9 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.1.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -562,13 +574,10 @@ function prepareSupportAndResistanceWindow() {
                                                                         Call out Strategies? <input id="${fieldCallStrategies}" type="checkbox">
                                                                     </div>
                                                                     <div>
-                                                                        Only Mark & Call Strategies of People I follow? (uncheck for all mentions) <input id="${fieldPlayAllCheckBoxId}" type="checkbox">
+                                                                        Only Call Strategies of People I follow? (uncheck for all mentions) <input id="${fieldPlayOnlyOfFollowed}" type="checkbox">
                                                                     </div>
                                                                     <div>
                                                                       Call Marks Trades <input id="${fieldCallMarksTrades}" type="checkbox">
-                                                                    </div>
-                                                                    <div>
-                                                                    Highlight-Color <input id="${fieldHightlightColor}" type="color" value="${getHighlightColor()}">
                                                                     </div>
                                                                     <div>
                                                                     Read Chat: <input id="${fieldSpeakHighlights}" type="checkbox">
@@ -579,7 +588,10 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                     Read All: <input id="${fieldReadAllEntries}" type="checkbox">
                                                                     </div>
-                                                                  <div>
+                                                                    <div>
+                                                                    Highlight-Color <input id="${fieldHightlightColor}" type="color" value="${getHighlightColor()}">
+                                                                    </div>
+                                                                    <div>
                                                                     Follower-Color <input id="${fieldFollowerColor}" type="color" value="${getFollowerColor()}">
                                                                   </div>
                                                                   <div>
@@ -619,7 +631,7 @@ document.getElementById(fieldHighlightInputId).value = state[fieldHighlightInput
 ) : "";
 document.getElementById(fieldPlayBeep).checked = state[fieldPlayBeep];
 document.getElementById(fieldCallStrategies).checked = state[fieldCallStrategies];
-document.getElementById(fieldPlayAllCheckBoxId).checked = state[fieldPlayAllCheckBoxId];
+document.getElementById(fieldPlayOnlyOfFollowed).checked = state[fieldPlayOnlyOfFollowed];
 document.getElementById(fieldSilence).checked = state[fieldSilence];
 document.getElementById(fieldHideTray).addEventListener("change", hideTray);
 document.getElementById(fieldCallMarksTrades).checked = state[fieldCallMarksTrades]
@@ -660,8 +672,8 @@ document.getElementById(fieldCallStrategies).addEventListener("change", (evt)=>{
   state[fieldCallStrategies] = evt.target.checked;
   storeState(state);
 });
-document.getElementById(fieldPlayAllCheckBoxId).addEventListener("change", (evt)=>{
-  state[fieldPlayAllCheckBoxId] = evt.target.checked;
+document.getElementById(fieldPlayOnlyOfFollowed).addEventListener("change", (evt)=>{
+  state[fieldPlayOnlyOfFollowed] = evt.target.checked;
   storeState(state);
 });
 document.getElementById(fieldHideTray).addEventListener("change", (evt)=>{
@@ -746,7 +758,7 @@ function isCalloutStrategies() {
 }
 
 function isCallOutStrategiesOfEverybody() {
-  return state[fieldPlayAllCheckBoxId];
+  return !state[fieldPlayOnlyOfFollowed];
 }
 
 function getHighlightColor() {
@@ -869,7 +881,6 @@ process();
 console.log(
   "Script applied. It worked. Feel free to close your Dev Tools. You need to apply the script, whenever you open your Browser or Reload."
 );
-
 
 
 }
