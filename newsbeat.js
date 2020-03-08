@@ -250,6 +250,11 @@ const kyl100Strategy = {
   sound: "Know your Limit 100"
 };
 
+const idear100 = {
+  matcher: ["100% idea", "idear"],
+  sound: "100% idear"
+};
+
 const strategyArr = [
   oneAndDoneStrategy,
   markVStrategy,
@@ -259,7 +264,8 @@ const strategyArr = [
   vwapReversalStrategy,
   double8Strategy,
   kyl55Strategy,
-  kyl100Strategy
+  kyl100Strategy,
+  idear100
 ];
 
 //on the initial run, we do not want to shout out all the strategies

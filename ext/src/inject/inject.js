@@ -16,7 +16,7 @@ function initializeInterval() {
 
 function script() {
 
-  // VERSION 1.0.8
+   // VERSION 1.0.8
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -138,8 +138,14 @@ const hideTray = function() {
 
 function speak(msg) { 
   if(SpeechSynthesisUtterance) {
-      speechSynthesis.speak(_newMessageToSpeak(`${msg.name} says`)); 
-      speechSynthesis.speak(_newMessageToSpeak(msg.text)); 
+      speakText(`${msg.name} says`); 
+      speakText(msg.text); 
+  }
+}
+
+function speakText(textString) {
+  if(speechSynthesis) {
+    speechSynthesis.speak(_newMessageToSpeak(textString));
   }
 }
 
@@ -175,6 +181,15 @@ const storeState = (state) => {
   if (localStorage) {
     localStorage[localStorageKey] = JSON.stringify(state);
   }
+}
+
+
+const calloutStrategy = (msg) => {
+  const matchingStrategy = strategyArr.find(strategy => strategy.matcher.some(str => stringmatch(msg.text, str, "i")));
+  if (matchingStrategy) {
+    speakText(matchingStrategy.sound)
+  }
+  
 }
 
 //state 
@@ -285,8 +300,8 @@ const allValidStrategyStrings = strategyArr.reduce(
  */
 const callOuts = [
   {
-    matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.msg, st, "i")),
-    handler: calloutStrategy(msg),
+    matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")),
+    handler: msg => calloutStrategy(msg),
     condition: isCalloutStrategies
   },
   {
@@ -329,13 +344,6 @@ mutationObserver.observe(document.getElementsByClassName("chat-body")[0], {
   subtree: true
 });
 
-const calloutStrategy = (msg) => {
-  const matchingStrategy = strategyArr.find(strategy => strategy.matcher.some(str => stringmatch(msg.text, str, "i")));
-  if (matchingStrategy) {
-    speak(matchingStrategy.sound)
-  }
-  
-}
 
 const handleCollection = (key, msg) => {
   if (!document.getElementById(`collection_window`)) {
@@ -576,6 +584,7 @@ function prepareSupportAndResistanceWindow() {
   return formContainer;
 }
 
+prepareSupportAndResistanceWindow();
 
 //synchronize
 document.getElementById(fieldReset).addEventListener("click", (evt)=>{
