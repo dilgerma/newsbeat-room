@@ -1,4 +1,4 @@
-// VERSION 1.0.7
+// VERSION 1.0.8
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -65,6 +65,8 @@ const fieldHideForm = "field_hide_form";
 const fieldCallMarksTrades = "field_marks_trades";
 const fieldCollections = "field_collections";
 const fieldSilence = "field_silence";
+const fieldSpeakHighlights = "field_speakenabled";
+const fieldReadAllEntries = "field_readallentries";
 
 const callMarksTrades = true;
 const playStrategiesSound = true;
@@ -126,10 +128,14 @@ const readState = () => {
     [fieldHighlightInputId]: highlightKeywords,
     [fieldCollections]: collections,
     [fieldFollowedPeopleInputId]: followed,
-    [fieldSilence] : false
+    [fieldSilence] : false,
+    [fieldSpeakHighlights] : false,
+    [fieldReadAllEntries]: false
   };
 }
 const state = readState();
+
+const speaker = SpeechSynthesisUtterance ?  new SpeechSynthesisUtterance() : undefined;
 
 //sounds
 var marksTrade = new Audio(
@@ -280,6 +286,12 @@ const callOuts = [
     },
     condition: () => getCollections().length > 0
   },
+  {
+    matcher : msg => isReadAllEntries() || getFollowedPeople().some(name => name == msg.name),
+    handler: msg => speak(msg),
+    condition: () => isSpeakEnabled()
+
+  }
 ];
 
 function escapeRegExp(string) {
@@ -405,6 +417,23 @@ const handleCollection = (key, msg) => {
     });
 };
 
+function speak(msg) { 
+  if(SpeechSynthesisUtterance) {
+      speechSynthesis.speak(newMessage(`${msg.name} says`)); 
+      speechSynthesis.speak(newMessage(msg.text)); 
+  }
+}
+
+function newMessage(text) {
+  var utterance = new SpeechSynthesisUtterance();
+  utterance.text = text;
+  utterance.lang = 'en-US';
+  utterance.volume = 1; // 0 to 1
+  utterance.rate = 1; // 0.1 to 10
+  utterance.pitch = 1; //0 to 2
+  return utterance;
+}
+
 const updateCollecions = selection => {
   selectedCollection = selection;
   const container = document.getElementById(`collection_id_list`);
@@ -494,7 +523,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.0.7 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.0.8 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -532,7 +561,13 @@ function prepareSupportAndResistanceWindow() {
                                                                     </div>
                                                                     <div>
                                                                     Highlight-Color <input id="${fieldHightlightColor}" type="color" value="${getHighlightColor()}">
-                                                                  </div>
+                                                                    </div>
+                                                                    <div>
+                                                                    Read Chat: <input id="${fieldSpeakHighlights}" type="checkbox">
+                                                                    </div>
+                                                                    <div>
+                                                                    Read All: <input id="${fieldReadAllEntries}" type="checkbox">
+                                                                    </div>
                                                                   <div>
                                                                     Follower-Color <input id="${fieldFollowerColor}" type="color" value="${getFollowerColor()}">
                                                                   </div>
@@ -575,6 +610,10 @@ document.getElementById(fieldPlayAllCheckBoxId).checked = state[fieldPlayAllChec
 document.getElementById(fieldSilence).checked = state[fieldSilence];
 document.getElementById(fieldHideTray).addEventListener("change", hideTray);
 document.getElementById(fieldCallMarksTrades).checked = state[fieldCallMarksTrades]
+document.getElementById(fieldSpeakHighlights).checked = state[fieldSpeakHighlights]
+document.getElementById(fieldReadAllEntries).checked = state[fieldReadAllEntries]
+
+
 
 document.getElementById(fieldCollections).value = state[fieldCollections].length > 0 ? state[fieldCollections].reduce(
     (acc, highlighted) => `${acc},${highlighted}`
@@ -651,6 +690,19 @@ document.getElementById(fieldSilence).addEventListener("change", (evt)=>{
   state[fieldSilence] = evt.target.checked;
   storeState(state);
 });
+document.getElementById(fieldReadAllEntries).addEventListener("change", (evt)=>{
+  state[fieldReadAllEntries] = evt.target.checked;
+  storeState(state);
+});
+document.getElementById(fieldSpeakHighlights).addEventListener("change", (evt)=>{
+  state[fieldSpeakHighlights] = evt.target.checked;
+  if(!evt.target.checked){
+    if(speechSynthesis) {
+      speechSynthesis.cancel();
+    }
+  }
+  storeState(state);
+});
 
 
 
@@ -680,6 +732,14 @@ function isCallOutStrategiesOfEverybody() {
 
 function getHighlightColor() {
   return state[fieldHightlightColor];
+}
+
+function isSpeakEnabled() {
+  return !state[fieldSilence] && state[fieldSpeakHighlights];
+}
+
+function isReadAllEntries() {
+  return isSpeakEnabled() && state[fieldReadAllEntries];
 }
 
 function getFollowerColor() {
