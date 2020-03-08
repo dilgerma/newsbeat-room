@@ -15,8 +15,7 @@ function initializeInterval() {
 }
 
 function script() {
-
-   // VERSION 1.0.8
+  // VERSION 1.0.9
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -85,6 +84,7 @@ const fieldCollections = "field_collections";
 const fieldSilence = "field_silence";
 const fieldSpeakHighlights = "field_speakenabled";
 const fieldReadAllEntries = "field_readallentries";
+const fieldKeywordsToRead = "field_keywords_to_read";
 
 const callMarksTrades = true;
 const playStrategiesSound = true;
@@ -209,7 +209,8 @@ const readState = () => {
     [fieldFollowedPeopleInputId]: followed,
     [fieldSilence] : false,
     [fieldSpeakHighlights] : false,
-    [fieldReadAllEntries]: false
+    [fieldReadAllEntries]: false,
+    [fieldKeywordsToRead]: []
   };
 }
 const state = readState();
@@ -268,6 +269,11 @@ const kyl100Strategy = {
   sound: "Know your Limit 100"
 };
 
+const idear100 = {
+  matcher: ["100% idea", "idear"],
+  sound: "100% idear"
+};
+
 const strategyArr = [
   oneAndDoneStrategy,
   markVStrategy,
@@ -277,7 +283,8 @@ const strategyArr = [
   vwapReversalStrategy,
   double8Strategy,
   kyl55Strategy,
-  kyl100Strategy
+  kyl100Strategy,
+  idear100
 ];
 
 //on the initial run, we do not want to shout out all the strategies
@@ -298,13 +305,15 @@ const allValidStrategyStrings = strategyArr.reduce(
  * a handler - what to do it it can process the message
  * a condition - check if enabled or not
  */
-const callOuts = [
+const messageProcessors = [
   {
+    name: "callout strategies",
     matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")),
     handler: msg => calloutStrategy(msg),
     condition: isCalloutStrategies
   },
   {
+    name: "callout Marks Trades",
     matcher: msg => {
       return msg.name == "David W" && stringmatch(msg.text, "MARK'S TRADE");
     },
@@ -314,6 +323,7 @@ const callOuts = [
     condition: isCallMarksTrades
   },
   {
+    name: "Collections",
     matcher: msg => getFollowedPeople().some(name => name == msg.name),
     handler: msg => handleCollection(msg.name, msg),
     condition: () => getFollowedPeople().length > 0
@@ -330,9 +340,17 @@ const callOuts = [
     condition: () => getCollections().length > 0
   },
   {
-    matcher : msg => isReadAllEntries() || getFollowedPeople().some(name => name == msg.name),
+    name: "read only entries of followed people",
+    matcher : msg => !isReadAllEntries() || getFollowedPeople().some(name => name == msg.name),
     handler: msg => speak(msg),
-    condition: () => isSpeakEnabled()
+    condition: () => isSpeakEnabled() && !isReadOnlyKeywords()
+   
+  },
+  {
+    name: "read highlights or all entries",
+    matcher : msg => isReadAllEntries() || getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")),
+    handler: msg => speak(msg),
+    condition: () => isSpeakEnabled() && isReadOnlyKeywords()
 
   }
 ];
@@ -513,7 +531,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.0.8 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.0.9 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -554,6 +572,9 @@ function prepareSupportAndResistanceWindow() {
                                                                     </div>
                                                                     <div>
                                                                     Read Chat: <input id="${fieldSpeakHighlights}" type="checkbox">
+                                                                    </div>
+                                                                    <div>
+                                                                      Keywords to read <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords to exclusively read - like TSLA,resistance,support">
                                                                     </div>
                                                                     <div>
                                                                     Read All: <input id="${fieldReadAllEntries}" type="checkbox">
@@ -604,6 +625,9 @@ document.getElementById(fieldHideTray).addEventListener("change", hideTray);
 document.getElementById(fieldCallMarksTrades).checked = state[fieldCallMarksTrades]
 document.getElementById(fieldSpeakHighlights).checked = state[fieldSpeakHighlights]
 document.getElementById(fieldReadAllEntries).checked = state[fieldReadAllEntries]
+document.getElementById(fieldKeywordsToRead).value = state[fieldKeywordsToRead] && state[fieldKeywordsToRead].length > 0 ? state[fieldKeywordsToRead].reduce(
+  (acc, highlighted) => `${acc},${highlighted}`
+) : "";
 
 document.getElementById(fieldCollections).value = state[fieldCollections].length > 0 ? state[fieldCollections].reduce(
     (acc, highlighted) => `${acc},${highlighted}`
@@ -674,6 +698,11 @@ document.getElementById(fieldStrategyColor).addEventListener("change", (evt)=>{
 });
 document.getElementById(fieldSilence).addEventListener("change", (evt)=>{
   state[fieldSilence] = evt.target.checked;
+  if(!evt.target.checked){
+    if(speechSynthesis) {
+      speechSynthesis.cancel();
+    }
+  }
   storeState(state);
 });
 document.getElementById(fieldReadAllEntries).addEventListener("change", (evt)=>{
@@ -687,6 +716,10 @@ document.getElementById(fieldSpeakHighlights).addEventListener("change", (evt)=>
       speechSynthesis.cancel();
     }
   }
+  storeState(state);
+});
+document.getElementById(fieldKeywordsToRead).addEventListener("change", (evt)=>{
+  state[fieldKeywordsToRead] = evt.target.value.split(",").map(entry => entry.trim()).filter(entry => entry.length > 0);
   storeState(state);
 });
 
@@ -726,6 +759,14 @@ function isSpeakEnabled() {
 
 function isReadAllEntries() {
   return isSpeakEnabled() && state[fieldReadAllEntries];
+}
+
+function isReadOnlyKeywords() {
+  return isSpeakEnabled() && state[fieldKeywordsToRead] && state[fieldKeywordsToRead].length > 0;
+}
+
+function getReadKeywords() {
+  return state[fieldKeywordsToRead] && state[fieldKeywordsToRead].length > 0 ? state[fieldKeywordsToRead] : []
 }
 
 function getFollowerColor() {
@@ -781,7 +822,7 @@ function process(mutations) {
   );
 
   allNewMessages.forEach(msg =>
-    callOuts
+    messageProcessors
       .filter(
         callout =>
           (callout.condition ? callout.condition() : true) &&
@@ -828,6 +869,7 @@ process();
 console.log(
   "Script applied. It worked. Feel free to close your Dev Tools. You need to apply the script, whenever you open your Browser or Reload."
 );
+
 
 
 }
