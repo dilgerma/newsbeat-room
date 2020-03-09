@@ -16,7 +16,7 @@ function initializeInterval() {
 
 function script() {
 
-  // VERSION 1.1.0
+   // VERSION 1.2.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -326,12 +326,8 @@ const messageProcessors = [
   },
   {
     name: "callout Marks Trades",
-    matcher: msg => {
-      return msg.name == "David W" && stringmatch(msg.text, "MARK'S TRADE");
-    },
-    handler: msg => {
-      speakText("Marks Trade")
-    },
+    matcher: msg => msg.name == "David W" && stringmatch(msg.text, "MARK'S TRADE"),
+    handler: msg => speakText("Marks Trade"),
     condition: isCallMarksTrades && !firstRun && !isReadAllEntries()
   },
   {
@@ -341,8 +337,7 @@ const messageProcessors = [
     condition: () => getFollowedPeople().length > 0
   },
   {
-    matcher: msg =>
-      getCollections().some(keyword => stringmatch(msg.text, keyword, "i")),
+    matcher: msg => getCollections().some(keyword => stringmatch(msg.text, keyword, "i")),
     handler: msg => {
       const matchinKeyWord = getCollections().find(keyword =>
         stringmatch(msg.text, keyword, "i")
@@ -359,8 +354,8 @@ const messageProcessors = [
    
   },
   {
-    name: "read highlights",
-    matcher : msg => getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")),
+    name: "read highlights or specific names",
+    matcher : msg => getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")) || getReadKeywords().some(keyword => stringmatch(msg.name, keyword, "i")),
     handler: msg => speak(msg),
     condition: () => isSpeakEnabled() && !isReadAllEntries() && getReadKeywords().length > 0 && !firstRun
   },
@@ -549,7 +544,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.1.0 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.2.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -589,7 +584,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     Read Chat: <input id="${fieldSpeakHighlights}" type="checkbox">
                                                                     </div>
                                                                     <div>
-                                                                      Keywords to read <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords to exclusively read - like TSLA,resistance,support">
+                                                                      Keywords to read <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords or Names to exclusively read - like TSLA,resistance,support">
                                                                     </div>
                                                                     <div>
                                                                     Read All: <input id="${fieldReadAllEntries}" type="checkbox">
