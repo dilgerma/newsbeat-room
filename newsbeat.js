@@ -293,13 +293,13 @@ const messageProcessors = [
     name: "callout all strategies",
     matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")),
     handler: msg => calloutStrategy(msg),
-    condition: ()=> !firstRun && isCalloutStrategies() && isCallOutStrategiesOfEverybody()
+    condition: ()=> !firstRun && isCalloutStrategies() && isCallOutStrategiesOfEverybody() && !isReadAllEntries()
   },
   {
     name: "callout strategies of followed people",
     matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")) && getFollowedPeople().some(name => msg.name == name),
     handler: msg => calloutStrategy(msg),
-    condition: ()=> !firstRun &&  isCalloutStrategies() && !isCallOutStrategiesOfEverybody()
+    condition: ()=> !firstRun &&  isCalloutStrategies() && !isCallOutStrategiesOfEverybody() && !firstRun && !isReadAllEntries()
   },
   {
     name: "highligh strategies",
@@ -314,7 +314,7 @@ const messageProcessors = [
     handler: msg => {
       speakText("Marks Trade")
     },
-    condition: isCallMarksTrades
+    condition: isCallMarksTrades && !firstRun && !isReadAllEntries()
   },
   {
     name: "Collections",
@@ -335,16 +335,22 @@ const messageProcessors = [
   },
   {
     name: "read only entries of followed people",
-    matcher : msg => !isReadAllEntries() || getFollowedPeople().some(name => name == msg.name),
+    matcher : msg => getFollowedPeople().some(name => name == msg.name),
     handler: msg => speak(msg),
-    condition: () => isSpeakEnabled() && !isReadOnlyKeywords()
+    condition: () => isSpeakEnabled() && !isReadAllEntries() && getReadKeywords().length == 0 && !firstRun
    
   },
   {
-    name: "read highlights or all entries",
-    matcher : msg => isReadAllEntries() || getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")),
+    name: "read highlights",
+    matcher : msg => getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")),
     handler: msg => speak(msg),
-    condition: () => isSpeakEnabled() && isReadOnlyKeywords()
+    condition: () => isSpeakEnabled() && !isReadAllEntries() && getReadKeywords().length > 0 && !firstRun
+  },
+  {
+    name: "read all chat",
+    matcher : msg => true,
+    handler: msg => speak(msg),
+    condition: () => isSpeakEnabled() && isReadAllEntries() && !firstRun
 
   }
 ];
