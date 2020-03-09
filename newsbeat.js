@@ -310,7 +310,7 @@ const messageProcessors = [
     name: "callout Marks Trades",
     matcher: msg => msg.name == "David W" && stringmatch(msg.text, "MARK'S TRADE"),
     handler: msg => speakText("Marks Trade"),
-    condition: isCallMarksTrades && !firstRun && !isReadAllEntries()
+    condition: isCallMarksTrades() && !firstRun && !isReadAllEntries()
   },
   {
     name: "Collections",
