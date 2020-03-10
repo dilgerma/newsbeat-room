@@ -1,4 +1,4 @@
- // VERSION 1.2.0
+ // VERSION 1.3.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -68,6 +68,7 @@ const fieldSilence = "field_silence";
 const fieldSpeakHighlights = "field_speakenabled";
 const fieldReadAllEntries = "field_readallentries";
 const fieldKeywordsToRead = "field_keywords_to_read";
+const fieldIdResistance = "field_id_resistance"
 
 const callMarksTrades = true;
 const playStrategiesSound = true;
@@ -97,7 +98,8 @@ const highlightTextColor = "black";
 // {'Martin' : []}
 const collection = {};
 var selectedCollection = ["None"];
-const staticCollections = [];
+const supportResistanceCollectionKey = "Support & Resistance";
+const staticCollections = [supportResistanceCollectionKey];
 
 // helpers
 const splitCommaSeparatedList = (list)=>{
@@ -171,8 +173,45 @@ const calloutStrategy = (msg) => {
   const matchingStrategy = strategyArr.find(strategy => strategy.matcher.some(str => stringmatch(msg.text, str, "i")));
   if (matchingStrategy) {
     speakText(matchingStrategy.sound)
+  } 
+}
+
+//build table for support / resistance based on marks message
+const processSupportResistance = (msg) => {
+    try {
+    const symbols = ["QQQ","SPY","IWM","Facebook(FB)","Apple(AAPL)","Amazon(AMZN)","Netflix(NFLX)","Google(GOOGL)","Gold(GLD)","Oil(USO)","S&P 500"];
+    const messages = [];
+    //messaeg without multiple spaces
+    const parsedMessage = msg.text.replace(/\s\s+/g, ' ');
+      
+    let table = "<table>"
+    table += "<tr><th>Symbol</th><th>Support</th><th>Resistance</th></tr>"
+    symbols.forEach(symbol => {
+      const expression = `${escapeRegExp(symbol)} (\\$\\d+\\.\\d+) (\\$\\d+\\.\\d+)`
+      const capture = new RegExp(expression).exec(parsedMessage);
+        const support = capture[1].replace("$","");
+        const resistance = capture[2].replace("$","");
+        table += `<tr><td style="text-align:left">${symbol}</td><td style="text-align:right">${support}</td><td style="text-align:right">${resistance}</td>`
+    });
+
+    table + "</table>"
+
+    
+    //prepare window
+    const supportResistanceContainer = document.createElement("div");
+    supportResistanceContainer.setAttribute("id", "field_support_resistance_container");
+    supportResistanceContainer.setAttribute("class", "grid-item");
+    const body = document.createElement("div");
+    supportResistanceContainer.appendChild(body);
+
+    document
+      .getElementsByClassName("big-cards")[0]
+      .appendChild(supportResistanceContainer);
+
+    body.innerHTML = table;
+  } catch(e) {
+    console.log("cannot parse Marks Support & Resistance Message, sorry.")
   }
-  
 }
 
 //state 
@@ -346,7 +385,11 @@ const messageProcessors = [
     matcher : msg => true,
     handler: msg => speak(msg),
     condition: () => isSpeakEnabled() && isReadAllEntries() && !firstRun
-
+  },
+  {
+    name: "render support / resistance",
+    matcher: msg => msg.name == "Mark M" && msg.text.startsWith("Stocks Support Resistance"),
+    handler: msg => processSupportResistance(msg)
   }
 ];
 
@@ -526,7 +569,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.2.0 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.3.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -589,7 +632,6 @@ function prepareSupportAndResistanceWindow() {
                                                                   <div>
                                                                     Hide Tray <input id="${fieldHideTray}" type="checkbox">
                                                                   </div>
-
                                                                   </form>`;
 
   document
