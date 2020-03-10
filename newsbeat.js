@@ -68,7 +68,14 @@ const fieldSilence = "field_silence";
 const fieldSpeakHighlights = "field_speakenabled";
 const fieldReadAllEntries = "field_readallentries";
 const fieldKeywordsToRead = "field_keywords_to_read";
-const fieldIdResistance = "field_id_resistance"
+
+//tradelog
+const fieldTradeLogSymbol = "field_tradelog_symbol";
+const fieldTradeLogStrategy = "field_tradelog_strategy";
+const fieldTradeLogEntry = "field_tradelog_entry";
+const fieldTradeLogExit = "field_tradelog_exit";
+const fieldHideTradelog = "field_hide_tradelog";
+
 
 const callMarksTrades = true;
 const playStrategiesSound = true;
@@ -98,8 +105,7 @@ const highlightTextColor = "black";
 // {'Martin' : []}
 const collection = {};
 var selectedCollection = ["None"];
-const supportResistanceCollectionKey = "Support & Resistance";
-const staticCollections = [supportResistanceCollectionKey];
+const staticCollections = [];
 
 // helpers
 const splitCommaSeparatedList = (list)=>{
@@ -149,7 +155,7 @@ const createRadioElement = (name, checked, value, displayString) => {
   var radioFragment = document.createElement("div");
   radioFragment.innerHTML = radioHtml;
 
-  return radioFragment.firstChild;
+  return radioFragment.firstChild;        
 };
 
 const removeAllElementsInNode = node => {
@@ -232,7 +238,8 @@ const readState = () => {
     [fieldSilence] : false,
     [fieldSpeakHighlights] : false,
     [fieldReadAllEntries]: false,
-    [fieldKeywordsToRead]: []
+    [fieldKeywordsToRead]: [],
+    [fieldHideTray] : false
   };
 }
 const state = readState();
@@ -555,6 +562,10 @@ const prepareCollectionWindow = (key, msg) => {
   document.getElementsByClassName("big-cards")[0].appendChild(container);
 };
 
+function prepareTradelog() {
+  //Buy AAPL 3/13 280 Call KYL21 5m
+}
+
 function prepareSupportAndResistanceWindow() {
   const formContainer = document.createElement("div");
   formContainer.setAttribute("id", "field_form_container");
@@ -658,7 +669,7 @@ document.getElementById(fieldPlayBeep).checked = state[fieldPlayBeep];
 document.getElementById(fieldCallStrategies).checked = state[fieldCallStrategies];
 document.getElementById(fieldPlayOnlyOfFollowed).checked = state[fieldPlayOnlyOfFollowed];
 document.getElementById(fieldSilence).checked = state[fieldSilence];
-document.getElementById(fieldHideTray).addEventListener("change", hideTray);
+document.getElementById(fieldHideTray).checked = state[fieldHideTray];
 document.getElementById(fieldCallMarksTrades).checked = state[fieldCallMarksTrades]
 document.getElementById(fieldSpeakHighlights).checked = state[fieldSpeakHighlights]
 document.getElementById(fieldReadAllEntries).checked = state[fieldReadAllEntries]
@@ -702,7 +713,13 @@ document.getElementById(fieldPlayOnlyOfFollowed).addEventListener("change", (evt
   storeState(state);
 });
 document.getElementById(fieldHideTray).addEventListener("change", (evt)=>{
+  state[fieldHideTray] = evt.target.checked;
+  storeState(state);
+  if(evt.target.checked) {
+    hideTray();
+  }
 });
+
 document.getElementById(fieldPlayBeep).addEventListener("change", (evt)=>{
   state[fieldPlayBeep] = evt.target.checked;
   storeState(state);
@@ -903,6 +920,9 @@ function process(mutations) {
 }
 
 process();
+if(state[fieldHideTray]) {
+  hideTray();
+}
 console.log(
   "Script applied. It worked. Feel free to close your Dev Tools. You need to apply the script, whenever you open your Browser or Reload."
 );

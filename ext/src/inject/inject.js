@@ -597,6 +597,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                       <button id="${fieldReset}" type="button">Reset Settings</button>
                                                                     </div>
+                                                                   
                                                                     <div>
                                                                         People following: <input style="width:100%" id="field_follow" type="text" placeholder="example: Cathie,Amy Harry,Gary Lundy,Cindy Morgan">
                                                                     </div>
