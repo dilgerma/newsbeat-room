@@ -69,9 +69,12 @@ const fieldSpeakHighlights = "field_speakenabled";
 const fieldReadAllEntries = "field_readallentries";
 const fieldKeywordsToRead = "field_keywords_to_read";
 const fieldDate = "field_date";
+const fieldTradeLogButton = "fieldTradeLog";
 
 
 const msgIdAttribute = "msg-id-attribute";
+const tradeLogModalDialog = "tradelog-modal";
+const tradlogModalDialogCloseButtonId = "tradelog-modal-close";
 
 //tradelog
 const fieldTradeLogSymbol = "field_tradelog_symbol";
@@ -624,6 +627,21 @@ const prepareCollectionWindow = (key, msg) => {
 
 function prepareTradelog() {
   //Buy AAPL 3/13 280 Call KYL21 5m
+
+ const modal = `<div id="${tradeLogModalDialog}" class="modal" style="display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);">
+
+  <!-- Modal content -->
+  <div style="background-color: #fefefe;  margin: 15% auto;   padding: 20px;  border: 1px solid #888;  width: 80%;">
+    <span id="${tradlogModalDialogCloseButtonId}">&times;</span>
+    <p>Some text in the Modal..</p>
+  </div>
+
+</div>`
+const node = document.createElement("div");
+node.innerHTML = modal;
+
+document.body.appendChild(node);
+
 }
 
 function prepareSupportAndResistanceWindow() {
@@ -650,6 +668,9 @@ function prepareSupportAndResistanceWindow() {
                                                                     <form>
                                                                     <div>
                                                                       <button id="${fieldReset}" type="button">Reset Settings</button>
+                                                                    </div>
+                                                                    <div>
+                                                                      <button id="${fieldTradeLogButton}" type="button">Share Trade</button>
                                                                     </div>
                                                                     <div>
                                                                         People following: <input style="width:100%" id="field_follow" type="text" placeholder="example: Cathie,Amy Harry,Gary Lundy,Cindy Morgan">
@@ -714,7 +735,7 @@ function prepareSupportAndResistanceWindow() {
 }
 
 prepareSupportAndResistanceWindow();
-
+prepareTradelog()
 //synchronize
 document.getElementById(fieldReset).addEventListener("click", (evt)=>{
   localStorage.removeItem(localStorageKey)
@@ -835,6 +856,14 @@ document.getElementById(fieldSpeakHighlights).addEventListener("change", (evt)=>
 document.getElementById(fieldKeywordsToRead).addEventListener("change", (evt)=>{
   state[fieldKeywordsToRead] = evt.target.value.split(",").map(entry => entry.trim()).filter(entry => entry.length > 0);
   storeState(state);
+});
+
+document.getElementById(fieldTradeLogButton).addEventListener("click", (evt)=>{
+  document.getElementById(tradeLogModalDialog).style["display"] = "block";
+});
+
+document.getElementById(tradlogModalDialogCloseButtonId).addEventListener("click", (evt) => {
+  document.getElementById(tradeLogModalDialog).style["display"] = "none";
 });
 
 
