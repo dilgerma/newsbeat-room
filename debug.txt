@@ -61,3 +61,9 @@ monitore// message of followed announcing 1nd
 
 <li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->11:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Arthur K</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">thanks Brenda</span></li>
 <li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->11:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Arthur F</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">thanks Brenda</span></li>
+
+Cathie,Amy Harry,Patrick Hawe,Emily,David W,Mark Finkelstein,Brian Kozar,Holly,Mark M,ArthurF,Pablo Godel
+
+<! sharing trades -->
+<li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->11:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Martin Dilger</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">Sharing Trade -- $AAPL - IN: 09:51 / OUT: 09:52 / ENTRY: 5 / EXIT: 6.49 / strategy: KYL-8 / contract: P / comment: my comment</span></li>
+
