@@ -94,6 +94,7 @@ const fieldTradeLogButton = "fieldTradeLog";
 const fieldShowTradeLogButton = "fieldShowTradelogButton";
 const fieldShowQuickTradesButton = "fieldShowQuickTradesButton";
 const fieldCallQuickTrades = "fieldCallQuickTrades";
+const fieldStopTalking = "fieldStopTalking";
 
 
 const msgIdAttribute = "msg-id-attribute";
@@ -958,6 +959,9 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                       <button id="${fieldReset}" type="button">Reset Settings</button>
                                                                     </div>
+                                                                    <div>
+                                                                      <button id="${fieldStopTalking}" type="button">Stop talking</button>
+                                                                    </div>
                                                                     <hr>
                                                                     <div>
                                                                       <div>
@@ -1047,6 +1051,11 @@ prepareSupportAndResistanceWindow();
 prepareModal()
 prepareTradeLog()
 //synchronize
+document.getElementById(fieldStopTalking).addEventListener("click", (evt)=>{
+  if(speechSynthesis) {
+    speechSynthesis.cancel();
+  }
+});
 document.getElementById(fieldReset).addEventListener("click", (evt)=>{
   localStorage.removeItem(localStorageKey)
 });
