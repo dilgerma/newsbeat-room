@@ -1,4 +1,4 @@
- // VERSION 1.5.2
+ // VERSION 1.6.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -74,6 +74,8 @@ const fieldKeywordsToRead = "field_keywords_to_read";
 const fieldDate = "field_date";
 const fieldTradeLogButton = "fieldTradeLog";
 const fieldShowTradeLogButton = "fieldShowTradelogButton";
+const fieldShowQuickTradesButton = "fieldShowQuickTradesButton";
+const fieldCallQuickTrades = "fieldCallQuickTrades";
 
 
 const msgIdAttribute = "msg-id-attribute";
@@ -89,6 +91,11 @@ const fieldTradeLogExit = "field_tradelog_exit";
 const fieldHideTradelog = "field_hide_tradelog";
 
 const tradeLogPrefix = "Sharing Trade --"
+
+//quicktrades
+const quickTrade = "*** ";
+const quickTradeLogModalDialog = "quick-tradelog-modal";
+const quickTrades = [];
 
 
 
@@ -223,6 +230,46 @@ const markMessage = (node) => node.setAttribute(
   `background-color:${getMarkerColor()};color:${markerTextColor}`
 );
 
+const sortByDate = (collection) => {
+  return collection.sort((first, second) => {
+    const matchesFirst = new RegExp("([0-9]+):([0-9]+)(pm|am)").exec(
+      first.date
+    );
+    const matchesSecond = new RegExp("([0-9]+):([0-9]+)(pm|am)").exec(
+      second.date
+    );
+
+    /**
+     * nasty logic here.
+     *
+     * am before pm
+     * 12 to 12:59 is pm, then it continues with 1,2,3
+     * 11 to 11:69 is am
+     */
+    const minutesFirst =
+      (Number.parseInt(matchesFirst[1]) != 12
+        ? Number.parseInt(matchesFirst[1]) * 60
+        : 1) +
+      Number.parseInt(matchesFirst[2]) +
+      (matchesFirst[3] == "am" ? 1 : 100000);
+    const minutesSecond =
+      (Number.parseInt(matchesSecond[1]) != 12
+        ? Number.parseInt(matchesSecond[1]) * 60
+        : 1) +
+      Number.parseInt(matchesSecond[2]) +
+      (matchesSecond[3] == "am" ? 1 : 100000);
+
+    if (minutesFirst == minutesSecond) {
+      return 0;
+    }
+    if (minutesFirst > minutesSecond) {
+      return 1;
+    } else {
+      return -1;
+    }
+  });
+}
+
 //build table for support / resistance based on marks message
 const processSupportResistance = (msg) => {
   const containerId = "field_support_resistance_container";
@@ -267,6 +314,22 @@ const processSupportResistance = (msg) => {
 
   } catch(e) {
     console.log("cannot parse Marks Support & Resistance Message, sorry.")
+  }
+}
+
+const handleQuickTrade = (msg) => {
+  quickTrades.push({
+    text: msg.text.replace("*** ", ""),
+    date: msg.date,
+    name: msg.name
+  });
+
+ sortByDate(quickTrades);
+
+  if(isCallOutQuickTrades()) {
+    if(!state[fieldPlayOnlyOfFollowed] || getFollowedPeople().indexOf(msg.name) !== -1) {
+      speakText(`${msg.name} took a trade`);
+    }
   }
 }
 
@@ -338,7 +401,8 @@ const readState = () => {
     [fieldReadAllEntries]: false,
     [fieldKeywordsToRead]: [],
     [fieldHideTray] : false,
-    [fieldDate] : highlightedMessages
+    [fieldDate] : highlightedMessages,
+    [fieldCallQuickTrades] : false
   };
 
   if(state[fieldDate] && state[fieldDate].date != today().getTime()) {
@@ -484,20 +548,20 @@ const messageProcessors = [
     name: "read only entries of followed people",
     matcher : msg => getFollowedPeople().some(name => name == msg.name),
     handler: msg => speak(msg),
-    condition: () => isSpeakEnabled() && !isReadAllEntries() && getReadKeywords().length == 0 && !firstRun
+    condition: () => isSpeakHighlightsEnabled() && !isReadAllEntries() && getReadKeywords().length == 0 && !firstRun
    
   },
   {
     name: "read highlights or specific names",
     matcher : msg => getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")) || getReadKeywords().some(keyword => stringmatch(msg.name, keyword, "i")),
     handler: msg => speak(msg),
-    condition: () => isSpeakEnabled() && !isReadAllEntries() && getReadKeywords().length > 0 && !firstRun
+    condition: () => isSpeakHighlightsEnabled() && !isReadAllEntries() && getReadKeywords().length > 0 && !firstRun
   },
   {
     name: "read all chat",
     matcher : msg => true,
     handler: msg => speak(msg),
-    condition: () => isSpeakEnabled() && isReadAllEntries() && !firstRun
+    condition: () => isSpeakHighlightsEnabled() && isReadAllEntries() && !firstRun
   },
   {
     name: "render support / resistance",
@@ -520,6 +584,11 @@ const messageProcessors = [
     name: "tradelog",
     matcher: (msg) => msg.text.startsWith(tradeLogPrefix),
     handler : (msg) => handleTradeLog(msg),
+  },
+  {
+    name: "quicktrades",
+    matcher: (msg) => msg.text.startsWith(quickTrade),
+    handler : (msg) => handleQuickTrade(msg),
   }
 ];
 
@@ -529,7 +598,6 @@ mutationObserver.observe(document.getElementsByClassName("chat-body")[0], {
   childList: true,
   subtree: true
 });
-
 
 const handleCollection = (key, msg) => {
   if (!document.getElementById(`collection_window`)) {
@@ -542,43 +610,7 @@ const handleCollection = (key, msg) => {
     collection[key] = [msg];
   }
 
-  collection[key].sort((first, second) => {
-    const matchesFirst = new RegExp("([0-9]+):([0-9]+)(pm|am)").exec(
-      first.date
-    );
-    const matchesSecond = new RegExp("([0-9]+):([0-9]+)(pm|am)").exec(
-      second.date
-    );
-
-    /**
-     * nasty logic here.
-     *
-     * am before pm
-     * 12 to 12:59 is pm, then it continues with 1,2,3
-     * 11 to 11:69 is am
-     */
-    const minutesFirst =
-      (Number.parseInt(matchesFirst[1]) != 12
-        ? Number.parseInt(matchesFirst[1]) * 60
-        : 1) +
-      Number.parseInt(matchesFirst[2]) +
-      (matchesFirst[3] == "am" ? 1 : 100000);
-    const minutesSecond =
-      (Number.parseInt(matchesSecond[1]) != 12
-        ? Number.parseInt(matchesSecond[1]) * 60
-        : 1) +
-      Number.parseInt(matchesSecond[2]) +
-      (matchesSecond[3] == "am" ? 1 : 100000);
-
-    if (minutesFirst == minutesSecond) {
-      return 0;
-    }
-    if (minutesFirst > minutesSecond) {
-      return 1;
-    } else {
-      return -1;
-    }
-  });
+  sortByDate(collection[key]);
 
   //prepare form radio choices
   const node = document.getElementById("collection_form");
@@ -704,6 +736,7 @@ document.body.appendChild(node);
 
 }
 
+
 function showInModal(node) {
   const modalBody = document.getElementById(tradelogModalContentId);
   removeAllElementsInNode(modalBody);
@@ -730,6 +763,28 @@ function showTradeLog() {
                 <td style="text-align:left">${trade.strategy}</td>  
                 <td style="text-align:left">${trade.contract}</td>  
                 <td style="text-align:left">${trade.comment}</td>  
+             `
+  });
+
+  table + "</table>"
+  node.innerHTML = table;
+  showInModal(node);
+
+
+}
+
+function showQuickTrades() {
+  let node = document.createElement("div");
+  node.setAttribute("style", "overflow-y: scroll; height:400px");
+
+  let table = "<table border='1' style='border:1xp solid black;width:100%'>"
+  table += "<tr><th style='text-align:left'>Name</th><th style='text-align:left'>Date</th><th>Trade</th></tr>"
+  quickTrades.filter(msg => !state[fieldPlayOnlyOfFollowed] || getFollowedPeople().indexOf(msg.name) !== - 1).forEach(msg => {
+    table += `<tr>
+                <td style="text-align:left">${msg.date}</td>
+                <td style="text-align:left">${msg.name}</td>  
+                <td style="text-align:left">${msg.text}</td>  
+              </tr>
              `
   });
 
@@ -874,7 +929,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.5.2 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.6.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -885,16 +940,34 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                       <button id="${fieldReset}" type="button">Reset Settings</button>
                                                                     </div>
+                                                                    <hr>
                                                                     <div>
-                                                                      <button id="${fieldTradeLogButton}" type="button">Share Trade</button>
-                                                                      <button id="${fieldShowTradeLogButton}" type="button">Show Trade</button>
+                                                                      <div>
+                                                                        <button id="${fieldTradeLogButton}" type="button">Share Detailed Trade</button>
+                                                                        <button id="${fieldShowTradeLogButton}" type="button">Show Detailed Trades</button>
+                                                                      </div>
+                          
                                                                     </div>
+                                                                    <div>
+                                                                    <div>&#9432; This is a beta feature to share very detailed trades. Might disappear again.</div>
+                                                                    </div>
+                                                                    <hr>
+                                                                    <div>
+                                                                    <button id="${fieldShowQuickTradesButton}" type="button">Show Quick Trades</button>
+                                                                    <div>&#9432; To share a quick trade just enter "*** " before the trade.</div>
+                                                                    <div>
+                                                                      <input type="checkbox" id="${fieldCallQuickTrades}" type="checkbox">Call Quick Trades</input>
+                                                                    </div>
+                                                                    </div>
+                                                                  
+                                                                    <hr>
                                                                     <div>
                                                                         People following: <input style="width:100%" id="field_follow" type="text" placeholder="example: Cathie,Amy Harry,Gary Lundy,Cindy Morgan">
                                                                     </div>
                                                                     <div>
                                                                         Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="upgrade,downgrade,Sweep">
                                                                     </div>
+                                                                    <hr>
                                                                     <div>
                                                                       Collections <input style="width:100%" id="${fieldCollections}" type="text" placeholder="Terms you are interested in today - comma separated">
                                                                     </div>
@@ -902,6 +975,7 @@ function prepareSupportAndResistanceWindow() {
                                                                       Which Collection to display?
                                                                       <div id="collection_form"></div>
                                                                     </div>
+                                                                    <hr>
                                                                     <div>
                                                                         Play beep? <input id="${fieldPlayBeep}" type="checkbox">
                                                                     </div>
@@ -916,13 +990,12 @@ function prepareSupportAndResistanceWindow() {
                                                                     </div>
                                                                     <div>
                                                                     Read Chat: <input id="${fieldSpeakHighlights}" type="checkbox">
+                                                                    Read All: <input id="${fieldReadAllEntries}" type="checkbox">
                                                                     </div>
                                                                     <div>
                                                                       Keywords to read <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords or Names to exclusively read - like TSLA,resistance,support">
                                                                     </div>
-                                                                    <div>
-                                                                    Read All: <input id="${fieldReadAllEntries}" type="checkbox">
-                                                                    </div>
+                                                                    <hr>
                                                                     <div>
                                                                     Highlight-Color <input id="${fieldHightlightColor}" type="color" value="${getHighlightColor()}">
                                                                     </div>
@@ -973,6 +1046,7 @@ document.getElementById(fieldHideTray).checked = state[fieldHideTray];
 document.getElementById(fieldCallMarksTrades).checked = state[fieldCallMarksTrades]
 document.getElementById(fieldSpeakHighlights).checked = state[fieldSpeakHighlights]
 document.getElementById(fieldReadAllEntries).checked = state[fieldReadAllEntries]
+document.getElementById(fieldCallQuickTrades).checked = state[fieldCallQuickTrades]
 document.getElementById(fieldKeywordsToRead).value = state[fieldKeywordsToRead] && state[fieldKeywordsToRead].length > 0 ? state[fieldKeywordsToRead].reduce(
   (acc, highlighted) => `${acc},${highlighted}`
 ) : "";
@@ -1008,6 +1082,11 @@ document.getElementById(fieldCallStrategies).addEventListener("change", (evt)=>{
   state[fieldCallStrategies] = evt.target.checked;
   storeState(state);
 });
+document.getElementById(fieldCallQuickTrades).addEventListener("change", (evt)=>{
+  state[fieldCallQuickTrades] = evt.target.checked;
+  storeState(state);
+});
+
 document.getElementById(fieldPlayOnlyOfFollowed).addEventListener("change", (evt)=>{
   state[fieldPlayOnlyOfFollowed] = evt.target.checked;
   storeState(state);
@@ -1089,6 +1168,10 @@ document.getElementById(tradlogModalDialogCloseButtonId).addEventListener("click
   document.getElementById(tradeLogModalDialog).style["display"] = "none";
 });
 
+document.getElementById(fieldShowQuickTradesButton).addEventListener("click", (evt) => {
+  showQuickTrades()
+});
+
 
 
 
@@ -1121,16 +1204,20 @@ function getHighlightColor() {
   return state[fieldHightlightColor];
 }
 
-function isSpeakEnabled() {
+function isSpeakHighlightsEnabled() {
   return !state[fieldSilence] && state[fieldSpeakHighlights];
 }
 
 function isReadAllEntries() {
-  return isSpeakEnabled() && state[fieldReadAllEntries];
+  return isSpeakHighlightsEnabled() && state[fieldReadAllEntries];
+}
+
+function isCallOutQuickTrades() {
+  return !firstRun && !state[fieldSilence] && state[fieldCallQuickTrades];
 }
 
 function isReadOnlyKeywords() {
-  return isSpeakEnabled() && state[fieldKeywordsToRead] && state[fieldKeywordsToRead].length > 0;
+  return isSpeakHighlightsEnabled() && state[fieldKeywordsToRead] && state[fieldKeywordsToRead].length > 0;
 }
 
 function getReadKeywords() {
