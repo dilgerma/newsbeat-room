@@ -15,8 +15,8 @@ function initializeInterval() {
 }
 
 function script() {
-  
- // VERSION 1.6.0
+ 
+ // VERSION 1.6.1
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -948,7 +948,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.6.0 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.6.1 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -957,10 +957,18 @@ function prepareSupportAndResistanceWindow() {
   const template = `
                                                                     <form>
                                                                     <div>
+                                                                    <span>
                                                                       <button id="${fieldReset}" type="button">Reset Settings</button>
-                                                                    </div>
-                                                                    <div>
+                                                                    </span>
+                                                                    <span>
                                                                       <button id="${fieldStopTalking}" type="button">Stop talking</button>
+                                                                    </span>
+                                                                    <span>
+                                                                      Silence <input id="${fieldSilence}" type="checkbox">
+                                                                    </span>
+                                                                    <span>
+                                                                      Hide Tray <input id="${fieldHideTray}" type="checkbox">
+                                                                    </span>
                                                                     </div>
                                                                     <hr>
                                                                     <div>
@@ -999,17 +1007,21 @@ function prepareSupportAndResistanceWindow() {
                                                                     </div>
                                                                     <hr>
                                                                     <div>
-                                                                        Play beep? <input id="${fieldPlayBeep}" type="checkbox">
-                                                                    </div>
-                                                                    <div>
-                                                                        Call out Strategies? <input id="${fieldCallStrategies}" type="checkbox">
+                                                                      <span>
+                                                                          Play beep? <input id="${fieldPlayBeep}" type="checkbox">
+                                                                      </span>
+                                                                      <span>
+                                                                          Call out Strategies? <input id="${fieldCallStrategies}" type="checkbox">
+                                                                      </span>
+                                                                      <span>
+                                                                          Call Marks Trades <input id="${fieldCallMarksTrades}" type="checkbox">
+                                                                      </span>
                                                                     </div>
                                                                     <div>
                                                                         Only Call Strategies of People I follow? (uncheck for all mentions) <input id="${fieldPlayOnlyOfFollowed}" type="checkbox">
                                                                     </div>
-                                                                    <div>
-                                                                      Call Marks Trades <input id="${fieldCallMarksTrades}" type="checkbox">
-                                                                    </div>
+                                                                    
+                                                                    <hr>
                                                                     <div>
                                                                     Read Chat: <input id="${fieldSpeakHighlights}" type="checkbox">
                                                                     Read All: <input id="${fieldReadAllEntries}" type="checkbox">
@@ -1030,12 +1042,6 @@ function prepareSupportAndResistanceWindow() {
                                                                   <div>
                                                                     Marker-Color <input id="${fieldMarkerColor}" type="color" value=${getMarkerColor()}>
                                                                   </div>
-                                                                  <div>
-                                                                    Silence <input id="${fieldSilence}" type="checkbox">
-                                                                  </div>
-                                                                  <div>
-                                                                    Hide Tray <input id="${fieldHideTray}" type="checkbox">
-                                                                  </div>
                                                                   </form>`;
 
   document
@@ -1052,9 +1058,9 @@ prepareModal()
 prepareTradeLog()
 //synchronize
 document.getElementById(fieldStopTalking).addEventListener("click", (evt)=>{
-  if(speechSynthesis) {
-    speechSynthesis.cancel();
-  }
+   if(speechSynthesis) {
+      speechSynthesis.cancel();
+    }
 });
 document.getElementById(fieldReset).addEventListener("click", (evt)=>{
   localStorage.removeItem(localStorageKey)
