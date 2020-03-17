@@ -1,6 +1,6 @@
 {
   "name": "NewsBeat Script",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "manifest_version": 2,
   "description": "Simple Script to hightlight stuff in the NewsBeat Room",
   "homepage_url": "https://github.com/dilgerma/newsbeat-room",
@@ -18,7 +18,7 @@
   },
   "page_action": {
     "default_icon": "icons/icon19.png",
-    "default_title": "page action demo"
+    "default_title": "NewsBeat Script"
   },
   "permissions": [
     "tts",
