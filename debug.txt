@@ -64,9 +64,6 @@ monitore// message of followed announcing 1nd
 
 Cathie,Amy Harry,Patrick Hawe,Emily,David W,Mark Finkelstein,Brian Kozar,Holly,Mark M,ArthurF,Pablo Godel
 
-<! sharing trades -->
-<li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->11:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Martin Dilger</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">Sharing Trade -- $AAPL - IN: 12:12 / OUT: 13:13 / ENTRY: 5.00 / EXIT: 6.22 / strategy: kyl-21 / contract: P / comment: just a small comment, dont mind</span></li>
-<li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->11:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Martin Dilger</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">Sharing Trade -- $msft - IN: 09:31 / OUT: 09:32 / ENTRY: 25 / EXIT: 26.33 / strategy: Kyl-21 / contract: C / comment: sdfsdf</span></li>
 
 <! quick trades -->
 <li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->11:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Martin Dilger</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">*** AAPL 125P in</span></li>

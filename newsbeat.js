@@ -50,9 +50,6 @@ const highlightKeywords = [];
 
 const localStorageKey= 'newsBeatScript';
 
-//tradelog trades
-const tradeLogTrades = [];
-
 //input fields
 const fieldReset = "field_reset";
 const fieldFollowedPeopleInputId = "field_follow";
@@ -79,28 +76,15 @@ const fieldShowQuickTradesButton = "fieldShowQuickTradesButton";
 const fieldCallQuickTrades = "fieldCallQuickTrades";
 const fieldStopTalking = "fieldStopTalking";
 const fieldIdVolume = "fieldIdVolume";
-
-
 const msgIdAttribute = "msg-id-attribute";
-const tradeLogModalDialog = "tradelog-modal";
-const tradlogModalDialogCloseButtonId = "tradelog-modal-close";
-const tradelogModalContentId = "tradelog-modal-content";
-
-//tradelog
-const fieldTradeLogSymbol = "field_tradelog_symbol";
-const fieldTradeLogStrategy = "field_tradelog_strategy";
-const fieldTradeLogEntry = "field_tradelog_entry";
-const fieldTradeLogExit = "field_tradelog_exit";
-const fieldHideTradelog = "field_hide_tradelog";
-
-const tradeLogPrefix = "Sharing Trade --"
+const modalDialogId = "tradelog-modal";
+const modalDialogCloseButton = "tradelog-modal-close";
+const modalContentId = "tradelog-modal-content";
 
 //quicktrades
 const quickTrade = "*** ";
 const quickTradeLogModalDialog = "quick-tradelog-modal";
 const quickTrades = [];
-
-
 
 const callMarksTrades = true;
 const playStrategiesSound = true;
@@ -336,52 +320,10 @@ const handleQuickTrade = (msg) => {
   }
 }
 
-//handle tradelog
-const handleTradeLog = (msg) => {
-
-  //msg format - $AAPL - IN: 505.00 / OUT: 680.00 / ENTRY: 09:41am / EXIT: 9:45pm / strategy: kyl21 
-
-  const pattern = `${escapeRegExp(tradeLogPrefix)} (\\$\\w+) - IN: (\\d+:\\d{2}) \/ OUT: (\\d+:\\d{2}) \/ ENTRY: (\\d+(.\\d{2})?) \/ EXIT: (\\d+(.\\d{2})?) \/ strategy: (.*) \/ contract: (.*) \/ comment: (.*)$`
-
-  try {
-
-  const matches = new RegExp(pattern).exec(
-    msg.text
-  );
-
-  const symbol = matches[1];
-  const entry = matches[2];
-  const exit = matches[3];
-  const entryTime = matches[4];
-  const exitTime = matches[6];
-  const strategy = matches[8];
-  const contract = matches[9]
-  const comment = matches[10];
-
-  tradeLogTrades.push(
-    {
-    name: msg.name,
-    posted: msg.date,
-    symbol : symbol,
-    entry: entry,
-    exit: exit,
-    entryTime: entryTime,
-    exitTime: exitTime,
-    strategy: strategy,
-    comment : comment,
-    contract: contract,
-    pl: exit - entry
-    }
-  );
-
-  } catch (e) {
-    console.log(`Cannot parse trade ${e}. Pattern ${pattern}. Message ${msg.text}`);
-  }
-
+const isEntryReadable = (msg) => {
+  const patternsToNotRead = ['***'];
+  return !patternsToNotRead.some(pattern => msg.text.startsWith(pattern))
 }
-
-//nodes
-const tradelogNode = document.createElement("div");
 
 //state 
 const readState = () => {
@@ -550,20 +492,20 @@ const messageProcessors = [
   },
   {
     name: "read only entries of followed people",
-    matcher : msg => getFollowedPeople().some(name => name == msg.name),
+    matcher : msg => isEntryReadable(msg) && getFollowedPeople().some(name => name == msg.name),
     handler: msg => speak(msg),
     condition: () => isSpeakHighlightsEnabled() && !isReadAllEntries() && getReadKeywords().length == 0 && !firstRun
    
   },
   {
     name: "read highlights or specific names",
-    matcher : msg => getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")) || getReadKeywords().some(keyword => stringmatch(msg.name, keyword, "i")),
+    matcher : msg => isEntryReadable(msg) && getReadKeywords().some(keyword => stringmatch(msg.text, keyword, "i")) || getReadKeywords().some(keyword => stringmatch(msg.name, keyword, "i")),
     handler: msg => speak(msg),
     condition: () => isSpeakHighlightsEnabled() && !isReadAllEntries() && getReadKeywords().length > 0 && !firstRun
   },
   {
     name: "read all chat",
-    matcher : msg => true,
+    matcher : msg => isEntryReadable(msg),
     handler: msg => speak(msg),
     condition: () => isSpeakHighlightsEnabled() && isReadAllEntries() && !firstRun
   },
@@ -583,11 +525,6 @@ const messageProcessors = [
       return state[fieldDate] && state[fieldDate][msgHash(msg)] == true
     },
     handler : (msg) => markMessage(msg.domNode)
-  },
-  {
-    name: "tradelog",
-    matcher: (msg) => msg.text.startsWith(tradeLogPrefix),
-    handler : (msg) => handleTradeLog(msg),
   },
   {
     name: "quicktrades",
@@ -724,12 +661,12 @@ const prepareCollectionWindow = (key, msg) => {
 function prepareModal() {
   //Buy AAPL 3/13 280 Call KYL21 5m
 
- const modal = `<div id="${tradeLogModalDialog}" class="modal" style="display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);">
+ const modal = `<div id="${modalDialogId}" class="modal" style="display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);">
 
   <!-- Modal content -->
   <div style="background-color: #fefefe;  margin: 15% auto;   padding: 20px;  border: 1px solid #888;  width: 80%;">
-    <span id="${tradlogModalDialogCloseButtonId}">&times;</span>
-    <p id="${tradelogModalContentId}"></p>
+    <span id="${modalDialogCloseButton}">&times;</span>
+    <p id="${modalContentId}"></p>
   </div>
 
 </div>`
@@ -742,39 +679,11 @@ document.body.appendChild(node);
 
 
 function showInModal(node) {
-  const modalBody = document.getElementById(tradelogModalContentId);
+  const modalBody = document.getElementById(modalContentId);
   removeAllElementsInNode(modalBody);
   modalBody.appendChild(node);
   node.style.display="block";
-  document.getElementById(tradeLogModalDialog).style["display"] = "block";
-}
-
-function showTradeLog() {
-  const node = document.createElement("div");
-  node.setAttribute("style", "overflow-y: scroll; height:400px;")
-
-  let table = "<table border='1' style='border:1xp solid black;width:100%'>"
-  table += "<tr><th style='text-align:left'>Name</th><th style='text-align:left'>Date</th><th style='text-align:left'>Symbol</th><th style='text-align:left'>Open</th><th style='text-align:left'>Close</th><th style='text-align:left'>Entry</th><th style='text-align:left'>Exit</th><th style='text-align:left'>Strategy</th><th style='text-align:left'>Contract</th><th style='text-align:left'>Comment</th></tr>"
-  tradeLogTrades.forEach(trade => {
-    table += `<tr>
-                <td style="text-align:left">${trade.name}</td>
-                <td style="text-align:left">${trade.posted}</td>  
-                <td style="text-align:left">${trade.symbol}</td>  
-                <td style="text-align:left">${trade.entry}</td>  
-                <td style="text-align:left">${trade.exit}</td>  
-                <td style="text-align:left">${trade.entryTime}</td>  
-                <td style="text-align:left">${trade.exitTime}</td>  
-                <td style="text-align:left">${trade.strategy}</td>  
-                <td style="text-align:left">${trade.contract}</td>  
-                <td style="text-align:left">${trade.comment}</td>  
-             `
-  });
-
-  table + "</table>"
-  node.innerHTML = table;
-  showInModal(node);
-
-
+  document.getElementById(modalDialogId).style["display"] = "block";
 }
 
 function showQuickTrades() {
@@ -795,128 +704,7 @@ function showQuickTrades() {
   table + "</table>"
   node.innerHTML = table;
   showInModal(node);
-
-
 }
-
-function prepareTradeLog() {
-  const node = document.createElement("div");
-
-  const field_id_tradelog_symbol = "tradelog_symbol";
-  const field_id_tradelog_entry= "tradelog_entry";
-  const field_id_tradelog_exit = "tradelog_exit";
-  const field_id_tradelog_open = "tradelog_open";
-  const field_id_tradelog_strategy = "tradelog_strategy";
-  const field_id_tradelog_close = "tradelog_close";
-  const field_id_tradelog_comment = "tradelog_comment";
-  const field_id_tradelog_message = "tradelog_message"
-  const field_id_tradelog_contract = "tradelog_contract";
-
-  const field_id_tradelog_button_generate = "tradelog_nbutton_generate";
-  const field_id_tradelog_button_clear = "tradelog_nbutton_clear";
-
-
-  
-  const template = `
-   <div>
-    <div>
-      <ul>
-        <li>Sharing is caring</li>
-        <li>Fill all fields and click generate Message, copy the message and close the window. Post the message to the chat. Thanks for sharing!
-        <li>Currently only intra day, share other trades directly in the chat</li>
-        <li>Don´t feel obliged to share - its up to you, but if you do...</li>
-        <li>Only share trades you did actually take</li>
-        <li>Be specific - so any trader can recap your trades and learn</li>
-      </ul>
-    </div>
-    <div>
-    <div>
-    <input type="button" id="${field_id_tradelog_button_clear}" value="clear">
-  </div>
-    <div>
-        <span>Symbol</span><input type="text" id="${field_id_tradelog_symbol}">
-      </div>
-      <div>
-      <span>Entry-Time</span><input type="time" id="${field_id_tradelog_entry}">
-      </div>
-      <div>
-      <span>Exit-time</span><input type="time" id="${field_id_tradelog_exit}">
-    </div>
-    <div>
-    <span>Entry Price</span><input type="number" id="${field_id_tradelog_open}" min="0.00">
-  </div>
-<div>
-<span>Exit Price</span><input type="number" id="${field_id_tradelog_close}" min="0.00">
-</div>
-<div>
-<span>Strategy (Kyl-21...)</span><input type="text" id="${field_id_tradelog_strategy}" min="0.00">
-</div>
-<div>
-<span>Contract</span><input type="text"  id="${field_id_tradelog_contract}">  (P = PUT, C = CALL, SL = Stock Long, SS = Stock Short)
-</div>
-  <div>
-  <span>Comment</span><input type="text" id="${field_id_tradelog_comment}" min="0.00">
-</div>
-<div>
-  <input type="button" id="${field_id_tradelog_button_generate}" value="generateMessage">
-</div>
-<div>
-<div>Paste this message when done:</div>
-</div>
-<div style="background-color:#cccccc;color:black" id="${field_id_tradelog_message}">
-</div>
-    </div>
-   </div>
-  `;
-
-  node.innerHTML = template;
-
-  tradelogNode.appendChild(node);
-
-  document.body.appendChild(tradelogNode);
-  tradelogNode.style.display = "none";
-
-  const symbolField = document.getElementById(field_id_tradelog_symbol);
-  const entryField = document.getElementById(field_id_tradelog_entry);
-  const exitField = document.getElementById(field_id_tradelog_exit);
-  const openField = document.getElementById(field_id_tradelog_open);
-  const closeField = document.getElementById(field_id_tradelog_close);
-  const strategyField = document.getElementById(field_id_tradelog_strategy);
-  const commentField = document.getElementById(field_id_tradelog_comment);
-  const contractField = document.getElementById(field_id_tradelog_contract);
-
-  
-  document.getElementById(field_id_tradelog_button_clear).addEventListener("click", (evt) => {
-  
-    symbolField.value = "";
-      entryField.value = "";
-      exitField.value = "";
-      openField.value = "";
-      closeField.value = "";
-      strategyField.value = "";
-      commentField.value = "";
-      contractField.value = "";
-
-      document.getElementById(field_id_tradelog_message).innerText = "";
-    });
-  document.getElementById(field_id_tradelog_button_generate).addEventListener("click", (evt) => {
-
-    const symbol =symbolField.value;
-    const entry = entryField.value;
-    const exit = exitField.value;
-    const open = openField.value;
-    const close = closeField.value;
-    const strategy = strategyField.value;
-    const comment = commentField.value;
-    const contract = contractField.value;
-
-    const msg = `${tradeLogPrefix} $${symbol} - IN: ${entry} / OUT: ${exit} / ENTRY: ${open} / EXIT: ${close} / strategy: ${strategy} / contract: ${contract} / comment: ${comment}`
-    document.getElementById(field_id_tradelog_message).innerText = msg;
-  });
-
-}
-
-
 
 
 function prepareSupportAndResistanceWindow() {
@@ -954,17 +742,6 @@ function prepareSupportAndResistanceWindow() {
                                                                     <span>
                                                                       Hide Tray <input id="${fieldHideTray}" type="checkbox">
                                                                     </span>
-                                                                    </div>
-                                                                    <hr>
-                                                                    <div>
-                                                                      <div>
-                                                                        <button id="${fieldTradeLogButton}" type="button">Share Detailed Trade</button>
-                                                                        <button id="${fieldShowTradeLogButton}" type="button">Show Detailed Trades</button>
-                                                                      </div>
-                          
-                                                                    </div>
-                                                                    <div>
-                                                                    <div>&#9432; This is a beta feature to share very detailed trades. Might disappear again.</div>
                                                                     </div>
                                                                     <hr>
                                                                     <div>
@@ -1013,7 +790,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     Voice Volume: <input id="${fieldIdVolume}" type="number" min=0 max=10>
                                                                     </div>
                                                                     <div>
-                                                                      Keywords to read <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords or Names to exclusively read - like TSLA,resistance,support">
+                                                                      Keywords or People to read (only these will be read) <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords or Names to exclusively read - like TSLA,resistance,support">
                                                                     </div>
                                                                     <hr>
                                                                     <div>
@@ -1041,7 +818,6 @@ function prepareSupportAndResistanceWindow() {
 //prepare domnodes
 prepareSupportAndResistanceWindow();
 prepareModal()
-prepareTradeLog()
 //synchronize
 document.getElementById(fieldStopTalking).addEventListener("click", (evt)=>{
    if(speechSynthesis) {
@@ -1181,16 +957,8 @@ document.getElementById(fieldIdVolume).addEventListener("change", (evt) => {
   storeState(state);
 });
 
-document.getElementById(fieldTradeLogButton).addEventListener("click", (evt)=>{
-  showInModal(tradelogNode);
-});
-
-document.getElementById(fieldShowTradeLogButton).addEventListener("click", (evt)=>{
-  showTradeLog();
-});
-
-document.getElementById(tradlogModalDialogCloseButtonId).addEventListener("click", (evt) => {
-  document.getElementById(tradeLogModalDialog).style["display"] = "none";
+document.getElementById(modalDialogCloseButton).addEventListener("click", (evt) => {
+  document.getElementById(modalDialogId).style["display"] = "none";
 });
 
 document.getElementById(fieldShowQuickTradesButton).addEventListener("click", (evt) => {
