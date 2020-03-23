@@ -16,7 +16,8 @@ function initializeInterval() {
 
 function script() {
  
- // VERSION 1.6.3
+  
+ // VERSION 1.7.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -63,6 +64,8 @@ const followed = ["Mark M"];
 //"Cathie", "Amy Harry", "Patrick Hawe"
 const collections = [];
 
+const backupMessages = [];
+
 const highlightKeywords = [];
 
 const localStorageKey= 'newsBeatScript';
@@ -97,6 +100,11 @@ const msgIdAttribute = "msg-id-attribute";
 const modalDialogId = "tradelog-modal";
 const modalDialogCloseButton = "tradelog-modal-close";
 const modalContentId = "tradelog-modal-content";
+
+const fieldBackup = "field-button-backup";
+const fieldLoadBackup = "field-button-load-backup";
+const fieldClearBackup = "field-clear-backup";
+const fieldDisplayBackup = "fieldDisplayBackup";
 
 //quicktrades
 const quickTrade = "*** ";
@@ -226,6 +234,18 @@ const msgHash = (msg) => {
     hash |= 0; // Convert to 32bit integer
   }
   return hash;
+}
+
+
+const findAllMessages = (filterProcessed) => {
+ //all chat messages in the DOM as a simple array.
+  const chatMessageDomNodes = [].slice.call(
+    document.getElementsByClassName("chat-message")
+  );
+  //parsed message objects
+  return chatMessageDomNodes
+    .filter(node => node.getAttribute("processed") !== `${filterProcessed}`)
+    .map(parseEntry);
 }
 
 //marks a message via dbl click
@@ -382,8 +402,6 @@ const beepSound = new Audio(
 );
 document.body.appendChild(beepSound);
 beepSound.play();
-
-
 
 
 const oneAndDoneStrategy = {
@@ -694,13 +712,78 @@ document.body.appendChild(node);
 
 }
 
-
 function showInModal(node) {
   const modalBody = document.getElementById(modalContentId);
   removeAllElementsInNode(modalBody);
   modalBody.appendChild(node);
   node.style.display="block";
   document.getElementById(modalDialogId).style["display"] = "block";
+}
+
+function handleBackup() {
+  const messageStr = findAllMessages(false).map(msg => {delete msg.domNode; return msg;}).map(msg => JSON.stringify(msg)).reduce((acc, msg) => `${acc},${msg}`);
+  const messages = `[${messageStr}]`
+  //prepare download
+  var properties = {type: 'application/json'};
+  let file;
+  const today = new Date();
+  const dateString = `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}`;
+  try {
+    // Specify the filename using the File constructor, but ...
+    file = new File([messages], `${dateString}.json`, properties);
+  } catch (e) {
+    // ... fall back to the Blob constructor if that isn't supported.
+    file = new Blob([messages], properties);
+  }
+  var url = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href=url;
+  link.download=`${dateString}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+}
+
+function restoreBackup(evt) {
+  var files = evt.target.files; 
+  var reader = new FileReader();
+
+  reader.onload = ((file)=> {
+    return (e) => {
+      // erzeuge "Thumbnails"
+        const result = JSON.parse(e.target.result);
+        backupMessages.length = 0;
+        backupMessages.push(...result);
+    };
+  })(files);
+
+  // Klartext mit Zeichenkodierung UTF-8 auslesen.
+  reader.readAsText(files[0], 'utf8');
+}
+
+function showBackup() {
+  const originalSilence = state[fieldSilence];
+  state[fieldSilence] = true;
+  if(backupMessages.length == 0) {
+    return;
+  }
+  const container = document.createElement("ul");
+  container.setAttribute("id", "history-message-container");
+  container.setAttribute("class", "chat");
+  container.setAttribute("style", "overflow-y: scroll; height:400px")
+
+  backupMessages.forEach(msg => {
+    const template = `<span class="chat-message-timestamp" style="background-color:green;color:white"><!-- react-text: 1048 -->[<!-- /react-text --><!-- react-text: 1049 -->${msg.date}<!-- /react-text --><!-- react-text: 1050 -->]<!-- /react-text --></span><!-- react-text: 1051 --> <!-- /react-text --><span class="chat-message-username">${msg.name}</span><span class="chat-message-username">:</span><!-- react-text: 1054 --> <!-- /react-text --><span class="chat-message-text">${msg.text}</span>`
+    const node  = document.createElement("li");
+    node.setAttribute("class", "chat-message");
+    node.innerHTML = template;
+    container.appendChild(node);
+  });
+
+  showInModal(container);
+  process();
+  state[fieldSilence] = originalSilence;
 }
 
 function showQuickTrades() {
@@ -738,7 +821,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.6.3 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.7.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -822,6 +905,23 @@ function prepareSupportAndResistanceWindow() {
                                                                   <div>
                                                                     Marker-Color <input id="${fieldMarkerColor}" type="color" value=${getMarkerColor()}>
                                                                   </div>
+                                                                  <hr>
+                                                                  <div>
+                                                                  <span>
+                                                                    <button id="${fieldBackup}">Create Backup</button>
+                                                                  </span>
+                                                                  <span>
+                                                                    <input type="file" id="${fieldLoadBackup}"></button>
+                                                                  </span>
+                                                                  <span>
+                                                                  <button id="${fieldDisplayBackup}">Show</button>
+                                                                  </span>
+                                                                  <span>
+                                                                    <button id="${fieldClearBackup}">Clear Backup</button>
+                                                                  </span>
+                                                                  <div>&#9432; Stores all chat messages in a File. You can backup it and load it later to re-read. <br>Be sure to scroll straight to the first message, so that all messages are backed up.</div>
+                                                                  </div>
+                                                                  <hr>
                                                                   </form>`;
 
   document
@@ -835,6 +935,28 @@ function prepareSupportAndResistanceWindow() {
 //prepare domnodes
 prepareSupportAndResistanceWindow();
 prepareModal()
+
+// backup
+document.getElementById(fieldBackup).addEventListener("click", (evt) => {
+  evt.preventDefault();
+  handleBackup();
+});
+
+document.getElementById(fieldLoadBackup).addEventListener("change", (evt) => {
+  evt.preventDefault();
+  restoreBackup(evt);
+});
+
+document.getElementById(fieldClearBackup).addEventListener("click", (evt) => {
+  evt.preventDefault();
+  document.getElementById(fieldLoadBackup).value = ''
+});
+
+document.getElementById(fieldDisplayBackup).addEventListener("click", (evt) => {
+  evt.preventDefault();
+  showBackup();
+});
+
 //synchronize
 document.getElementById(fieldStopTalking).addEventListener("click", (evt)=>{
    if(speechSynthesis) {
@@ -1083,14 +1205,8 @@ function findParentNodeWithMatcher(node, matcherFunc) {
 
 
 function process(mutations) {
-  //all chat messages in the DOM as a simple array.
-  const chatMessageDomNodes = [].slice.call(
-    document.getElementsByClassName("chat-message")
-  );
-  //parsed message objects
-  const messages = chatMessageDomNodes
-    .filter(node => node.getAttribute("processed") !== "true")
-    .map(parseEntry);
+
+  const messages = findAllMessages(true);
 
   const allNewMessages = messages.filter(message => !message.processed);
 
