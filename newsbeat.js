@@ -1,5 +1,6 @@
 
- // VERSION 1.7.0
+  
+ // VERSION 1.8.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -52,6 +53,8 @@ const highlightKeywords = [];
 
 const localStorageKey= 'newsBeatScript';
 
+let speechRecognition;
+
 //input fields
 const fieldReset = "field_reset";
 const fieldFollowedPeopleInputId = "field_follow";
@@ -88,10 +91,21 @@ const fieldLoadBackup = "field-button-load-backup";
 const fieldClearBackup = "field-clear-backup";
 const fieldDisplayBackup = "fieldDisplayBackup";
 
+const fieldButtonStopTranscription = "fieldButtonStopTranscription";
+const fieldButtonStartTranscription = "fieldButtonStartTranscription";
+const fieldShowTranscription = "fieldShowTranscription";
+const fieldTranscriptionContainerOnAirHint = "fieldTranscriptionContainerOnAirHint";
+
+const transcriptionContainerId = "field_mark_transcription";
+const transcriptionContainerBodyId = `${transcriptionContainerId}-body`;
+
 //quicktrades
 const quickTrade = "*** ";
 const quickTradeLogModalDialog = "quick-tradelog-modal";
 const quickTrades = [];
+
+const transcriptions = [];
+let transcribeCancelled = false;
 
 const callMarksTrades = true;
 const playStrategiesSound = true;
@@ -161,6 +175,136 @@ function speakText(textString) {
   if(speechSynthesis) {
     speechSynthesis.speak(_newMessageToSpeak(textString));
   }
+}
+
+function initializeSpeechRecognition() {
+  try {
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var speechRecognition = new SpeechRecognition();
+    speechRecognition.continuous = true;
+    speechRecognition.lang = 'en-US';
+    return speechRecognition;
+
+  }
+  catch(e) {
+    console.error(e);
+  }
+}
+
+/*
+Transcription
+*/ 
+const prepareTranscriptionContainer = () => {
+ 
+  const container = document.createElement("div");
+  container.setAttribute("id", transcriptionContainerId);
+  container.style.setProperty("display", "none");
+  container.setAttribute(
+    "class",
+    "grid-item full-height chat-card-grid-item transcription-container"
+  );
+
+ const headerHtml = `<div style="width: 100%; background-color: rgb(0, 90, 132); white-space: nowrap; display: flex;"><button class="room-tab" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: 0px; padding: 0px; outline: none; font-size: 14px; font-weight: 500; position: relative; color: rgb(255, 255, 255); width: 100%; text-transform: uppercase; background-color: rgba(0, 0, 0, 0.2); text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 5px;"><div><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 48px;"><!-- react-text: 196 -->NewsBeat Script Live Transcription<!-- /react-text --></div></div></button></div>`
+ const header = document.createElement("div");
+ header.innerHTML=headerHtml;
+ container.appendChild(header);
+    
+  const bodyWrapper = document.createElement("div");
+  bodyWrapper.setAttribute(
+    "class",
+    "chat-body-wrapper full-height chat-card-grid-item"
+  );
+
+  const body = document.createElement("div");
+  body.setAttribute("class", "chat-body");
+
+  bodyWrapper.appendChild(body);
+
+  const list = document.createElement("ul");
+  list.setAttribute("class", "chat auto-scrolling");
+
+  body.appendChild(list);
+  list.setAttribute("id", transcriptionContainerBodyId);
+
+  container.appendChild(bodyWrapper);
+
+  document.getElementsByClassName("big-cards")[0].appendChild(container);
+
+}
+
+
+function transcribe() {
+  
+  if(!speechRecognition) {
+    speechRecognition = initializeSpeechRecognition();
+    if(!speechRecognition) {
+      console.log("speechRecognition is not available");
+    }
+  }
+  speechRecognition.onstart = function() { 
+ }
+  
+  speechRecognition.onspeechend = function(evt) {
+  }
+
+  speechRecognition.onaudioend = function(evt) {
+  }
+
+  speechRecognition.onend = function(evt) {
+    if(!transcribeCancelled) {
+      transcribe();
+    } else {
+      transcribeCancelled = false;
+    }
+  }
+
+
+  speechRecognition.onerror = function(event) {
+    if(event.error == 'no-speech') {
+      console.log('No speech was detected. Try again.');  
+    };
+  }
+  
+  speechRecognition.onresult = function(event) {
+  
+    // event is a SpeechRecognitionEvent object.
+    // It holds all the lines we have captured so far. 
+    // We only need the current one.
+    var current = event.resultIndex;
+  
+    // Get a transcript of what was said.
+    var transcript = event.results[current][0].transcript;
+    const today = new Date();
+    const dateString = today.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+
+    const msg = {
+      name: "Mark M",
+      text: transcript,
+      date: `[${dateString}]`,
+      processed: true,
+    };
+    msg.hash = msgHash(msg);
+  //  transcriptions.push(msg);
+    
+      const template = `<span class="chat-message-timestamp"<!-- react-text: 1048 --><!-- /react-text --><!-- react-text: 1049 -->${msg.date}<!-- /react-text --><!-- react-text: 1050 --><!-- /react-text --></span><!-- react-text: 1051 --> <!-- /react-text --><span class="chat-message-username">${msg.name}</span><span class="chat-message-username">:</span><!-- react-text: 1054 --> <!-- /react-text --><span class="chat-message-text">${msg.text}</span>`
+      const node  = document.createElement("li");
+      node.setAttribute("class", "transcribe-message");
+      node.innerHTML = template;
+      document.getElementById(transcriptionContainerBodyId).appendChild(node);
+  
+    // Add the current transcript to the contents of our Note.
+  }
+
+  speechRecognition.start();
+  document.getElementById(fieldTranscriptionContainerOnAirHint).style.setProperty("background-color", "green");
+}
+
+function stopSpeechRecognition() {
+  if(speechRecognition) {
+    speechRecognition.stop();
+    speechRecognition = undefined;
+  }
+  document.getElementById(fieldTranscriptionContainerOnAirHint).style.setProperty("background-color", "red");
 }
 
 function _newMessageToSpeak(text) {
@@ -275,6 +419,7 @@ const sortByDate = (collection) => {
     }
   });
 }
+
 
 //build table for support / resistance based on marks message
 const processSupportResistance = (msg) => {
@@ -489,7 +634,7 @@ const messageProcessors = [
     name: "callout Marks Trades",
     matcher: msg => msg.name == "David W" && stringmatch(msg.text, "MARK'S TRADE"),
     handler: msg => speakText("Marks Trade"),
-    condition: ()=> isCallMarksTrades() && !firstRun && !isReadAllEntries()
+    condition: () => isCallMarksTrades() && !firstRun && !isReadAllEntries()
   },
   {
     name: "Collections",
@@ -562,7 +707,7 @@ const handleCollection = (key, msg) => {
     prepareCollectionWindow(key, msg);
   }
 
-  if (collection[key] !== undefined) {
+  if (collection[key] !== undefined && !collection[key].some(collected => msg.hash === collected.hash)) {
     collection[key].push(msg);
   } else {
     collection[key] = [msg];
@@ -770,7 +915,7 @@ function showBackup() {
 
 function showQuickTrades() {
   let node = document.createElement("div");
-  node.setAttribute("style", "overflow-y: scroll; height:400px");
+  node.style["width"] = "100%";
 
   let table = "<table border='1' style='border:1xp solid black;width:100%'>"
   table += "<tr><th style='text-align:left'>Name</th><th style='text-align:left'>Date</th><th>Trade</th></tr>"
@@ -803,7 +948,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.7.0 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.8.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -811,6 +956,21 @@ function prepareSupportAndResistanceWindow() {
 
   const template = `
                                                                     <form>
+                                                                    <div>
+                                                                    <span>
+                                                                      <input type="checkbox" id="${fieldShowTranscription}">Show Transcription
+                                                                    </span>
+                                                                    <span>
+                                                                      <button id="${fieldButtonStartTranscription}">Transcribe Mark</button>
+                                                                    </span>
+                                                                    <span>
+                                                                     <button id="${fieldButtonStopTranscription}">Stop Transcribing</button>
+                                                                    </span>
+                                                                    <span id="${fieldTranscriptionContainerOnAirHint}" style="height: 10px;width:10px;border-radius:50%;background-color:red;display:inline-block;">
+                                                                    </span>
+                                                                    <div>&#9432; This only works if your sound is loud (no Headphones) <br>and there are no distractions. Its using your Mic for that.</div>
+                                                                  </div>
+                                                                  <hr>
                                                                     <div>
                                                                     <span>
                                                                       <button id="${fieldReset}" type="button">Reset Settings</button>
@@ -916,7 +1076,13 @@ function prepareSupportAndResistanceWindow() {
 
 //prepare domnodes
 prepareSupportAndResistanceWindow();
-prepareModal()
+prepareTranscriptionContainer();
+prepareModal();
+
+//transcription
+document.getElementById(fieldShowTranscription).addEventListener("change", (evt) => {
+  document.getElementById(transcriptionContainerId).style.setProperty("display", evt.target.checked ? "block" : "none");
+});
 
 // backup
 document.getElementById(fieldBackup).addEventListener("click", (evt) => {
@@ -1079,14 +1245,26 @@ document.getElementById(fieldIdVolume).addEventListener("change", (evt) => {
 });
 
 document.getElementById(modalDialogCloseButton).addEventListener("click", (evt) => {
+  evt.preventDefault();
   document.getElementById(modalDialogId).style["display"] = "none";
 });
 
 document.getElementById(fieldShowQuickTradesButton).addEventListener("click", (evt) => {
+  evt.preventDefault();
   showQuickTrades()
 });
 
+document.getElementById(fieldButtonStartTranscription).addEventListener("click", (evt) => {
+  evt.preventDefault();
+  transcribe();
+  document.getElementById(fieldTranscriptionContainerOnAirHint).style.setProperty("background-color", "green");
+});
 
+document.getElementById(fieldButtonStopTranscription).addEventListener("click", (evt) => {
+  evt.preventDefault();
+  transcribeCancelled = true;
+  stopSpeechRecognition()
+});
 
 
 //accessors
@@ -1156,13 +1334,15 @@ function isCallMarksTrades() {
 
 //parse a chat message
 function parseEntry(chatMessageNode) {
-  return {
+  const msg = {
     name: chatMessageNode.childNodes[4].innerText.trim(),
     text: chatMessageNode.childNodes[9].innerText.trim(),
     date: chatMessageNode.childNodes[0].innerText.trim(),
     processed: !!chatMessageNode.getAttribute("processed"),
-    domNode: chatMessageNode
+    domNode: chatMessageNode,
   };
+  msg.hash = msgHash(msg);
+  return msg;
 }
 
 
