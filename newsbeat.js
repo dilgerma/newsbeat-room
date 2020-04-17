@@ -141,6 +141,9 @@ const markedMessagesKey = "Marked Messages";
 //highlighted messages 
 const today = () => new Date(new Date().getFullYear(),new Date().getMonth() , new Date().getDate());
 
+//read mark
+const readMarkId = "readMark"
+
 const highlightedMessages = {
   date: today().getTime()
 };
@@ -373,6 +376,31 @@ const findAllMessages = (filterProcessed) => {
   return chatMessageDomNodes
     .filter(node => node.getAttribute("processed") !== `${filterProcessed}`)
     .map(parseEntry);
+}
+
+//set the last read mark
+const handleLastReadMark = (node) => {
+  const msgId = node.getAttribute(msgIdAttribute);
+  if(msgId) {
+
+    if(state[readMarkId]) {
+      const lastMarkedNode = document.querySelector(`li[msg-id-attribute='${state[readMarkId]}']`)
+      if (lastMarkedNode) {
+        lastMarkedNode.removeAttribute("style");
+      }
+    }
+
+    node.setAttribute(
+      "style",
+      `background-color:#C39BD3;color:white`
+    );
+
+    state[readMarkId] = msgId;
+
+    storeState(state);
+  }
+  
+
 }
 
 //marks a message via dbl click
@@ -697,6 +725,11 @@ const messageProcessors = [
     name: "quicktrades",
     matcher: (msg) => msg.text.startsWith(quickTrade),
     handler : (msg) => handleQuickTrade(msg),
+  },
+  {
+    name: "parseLastReadMark",
+    matcher: (msg) => state[readMarkId] == msgHash(msg),
+    handler : (msg) => handleLastReadMark(msg.domNode)
   }
 ];
 
@@ -732,6 +765,7 @@ const handleCollection = (key, msg) => {
     "None"
   );
   noneInput.onclick = evt => {
+    if(evt.detail)
     if (evt.target.checked) {
       document
         .getElementById("collection_window")
@@ -1352,18 +1386,24 @@ function parseEntry(chatMessageNode) {
   return msg;
 }
 
+function onClickHandler(evt) {
+  //only on triple click
+  if(evt.detail === 3) {
+    const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
+    handleLastReadMark(node);
+  } else if(evt.detail == 2){
+    //mark message
+    const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
 
-function dblClickHandler(evt) {
-
-  const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
-
-  markMessage(node)
-  if(node.getAttribute(msgIdAttribute)) {
-    //just mark the hash as highlighted.
-    state[fieldDate][node.getAttribute(msgIdAttribute)] = true;
-    storeState(state);
+    markMessage(node)
+    if(node.getAttribute(msgIdAttribute)) {
+      //just mark the hash as highlighted.
+      state[fieldDate][node.getAttribute(msgIdAttribute)] = true;
+      storeState(state);
+    }
   }
 }
+
 
 function findParentNodeWithMatcher(node, matcherFunc) {
   if(!matcherFunc(node)) {
@@ -1381,7 +1421,9 @@ function process(mutations) {
 
   //attach double click handler
   allNewMessages.forEach(
-    message => (message.domNode.ondblclick = dblClickHandler)
+    message => {
+      message.domNode.onclick = onClickHandler;
+    }
   );
 
   allNewMessages.forEach(msg =>
