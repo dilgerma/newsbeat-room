@@ -17,7 +17,7 @@ function initializeInterval() {
 function script() {
  
   
- // VERSION 1.8.2
+ // VERSION 1.9.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -113,8 +113,14 @@ const fieldButtonStartTranscription = "fieldButtonStartTranscription";
 const fieldShowTranscription = "fieldShowTranscription";
 const fieldTranscriptionContainerOnAirHint = "fieldTranscriptionContainerOnAirHint";
 
+const fieldFilter = "fieldFilter"
+const fieldFilterResetButton = "fieldFilterResetButton"
+
 const transcriptionContainerId = "field_mark_transcription";
 const transcriptionContainerBodyId = `${transcriptionContainerId}-body`;
+
+// x-custom
+const xcustom = "x-custom";
 
 //quicktrades
 const quickTrade = "*** ";
@@ -157,6 +163,9 @@ const markedMessagesKey = "Marked Messages";
 
 //highlighted messages 
 const today = () => new Date(new Date().getFullYear(),new Date().getMonth() , new Date().getDate());
+
+//read mark
+const readMarkId = "readMark"
 
 const highlightedMessages = {
   date: today().getTime()
@@ -388,8 +397,33 @@ const findAllMessages = (filterProcessed) => {
   );
   //parsed message objects
   return chatMessageDomNodes
-    .filter(node => node.getAttribute("processed") !== `${filterProcessed}`)
+    .filter(node => node.getAttribute(xcustom) !== "true" && node.getAttribute("processed") !== `${filterProcessed}`)
     .map(parseEntry);
+}
+
+//set the last read mark
+const handleLastReadMark = (node) => {
+  const msgId = node.getAttribute(msgIdAttribute);
+  if(msgId) {
+
+    if(state[readMarkId]) {
+      const lastMarkedNode = document.querySelector(`li[msg-id-attribute='${state[readMarkId]}']`)
+      if (lastMarkedNode) {
+        lastMarkedNode.removeAttribute("style");
+      }
+    }
+
+    node.setAttribute(
+      "style",
+      `background-color:#C39BD3;color:white`
+    );
+
+    state[readMarkId] = msgId;
+
+    storeState(state);
+  }
+  
+
 }
 
 //marks a message via dbl click
@@ -714,6 +748,11 @@ const messageProcessors = [
     name: "quicktrades",
     matcher: (msg) => msg.text.startsWith(quickTrade),
     handler : (msg) => handleQuickTrade(msg),
+  },
+  {
+    name: "parseLastReadMark",
+    matcher: (msg) => state[readMarkId] == msgHash(msg),
+    handler : (msg) => handleLastReadMark(msg.domNode)
   }
 ];
 
@@ -749,6 +788,7 @@ const handleCollection = (key, msg) => {
     "None"
   );
   noneInput.onclick = evt => {
+    if(evt.detail)
     if (evt.target.checked) {
       document
         .getElementById("collection_window")
@@ -790,7 +830,7 @@ const updateCollecions = selection => {
       const node = document.createElement("div");
       node.setAttribute("processed", "true");
       const msgTemplate = `
-                                                                        <li class="chat-message" processed="true">
+                                                                        <li class="chat-message" processed="true" ${xcustom}="true">
                                                                           <span class="chat-message-timestamp">${msg.date}</span>
                                                                           <span class="chat-message-username">${msg.name}</span>
                                                                           <span class="chat-message-username">:</span>
@@ -958,6 +998,18 @@ function showQuickTrades() {
 }
 
 
+function handleFilterMessages(filter) {
+    const allMessages = findAllMessages(false)
+    allMessages.forEach((msg) => {
+      
+      if(filter && filter.length > 0 && !stringmatch(msg.text, filter, 'i') && !stringmatch(msg.name, filter, 'i')) {
+        msg.domNode.style.setProperty("display", "none");
+      } else {
+        msg.domNode.style.removeProperty("display");
+      }
+    });
+  }
+
 function prepareSupportAndResistanceWindow() {
   const formContainer = document.createElement("div");
   formContainer.setAttribute("id", "field_form_container");
@@ -972,7 +1024,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.8.2 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.9.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -980,6 +1032,18 @@ function prepareSupportAndResistanceWindow() {
 
   const template = `
                                                                     <form>
+                                                                    <div>
+                                                                    <span>
+                                                                      Filter Messages by Content or Name: <input type="text" id="${fieldFilter}">
+                                                                    </span>
+                                                                    <span>
+                                                                      <input type="button" id="${fieldFilterResetButton}" value="Reset">
+                                                                    </span>
+                                                                    <div>
+                                                                    <div>&#9432; Put in a Keyword or a Name you are interested in.</div>
+                                                                    </div>
+                                                                    </div>
+                                                                    <hr>
                                                                     <div>
                                                                     <span>
                                                                       <input type="checkbox" id="${fieldShowTranscription}">Show Transcription
@@ -1102,6 +1166,15 @@ function prepareSupportAndResistanceWindow() {
 prepareSupportAndResistanceWindow();
 prepareTranscriptionContainer();
 prepareModal();
+
+//filter
+document.getElementById(fieldFilter).addEventListener("keyup", (evt) => {
+  handleFilterMessages(evt.target.value);
+});
+document.getElementById(fieldFilterResetButton).addEventListener("click", (evt) => {
+  document.getElementById(fieldFilter).value = "";
+  handleFilterMessages("");
+});
 
 //transcription
 document.getElementById(fieldShowTranscription).addEventListener("change", (evt) => {
@@ -1358,10 +1431,13 @@ function isCallMarksTrades() {
 
 //parse a chat message
 function parseEntry(chatMessageNode) {
+  const name = chatMessageNode.childNodes[4].innerText;
+  const text = chatMessageNode.childNodes[9].innerText;
+  const date = chatMessageNode.childNodes[0].innerText;
   const msg = {
-    name: chatMessageNode.childNodes[4].innerText.trim(),
-    text: chatMessageNode.childNodes[9].innerText.trim(),
-    date: chatMessageNode.childNodes[0].innerText.trim(),
+    name: name ? name.trim() : name,
+    text: text ? text.trim() : text,
+    date: date ? date.trim() : date,
     processed: !!chatMessageNode.getAttribute("processed"),
     domNode: chatMessageNode,
   };
@@ -1369,18 +1445,24 @@ function parseEntry(chatMessageNode) {
   return msg;
 }
 
+function onClickHandler(evt) {
+  //only on triple click
+  if(evt.detail === 3) {
+    const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
+    handleLastReadMark(node);
+  } else if(evt.detail == 2){
+    //mark message
+    const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
 
-function dblClickHandler(evt) {
-
-  const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
-
-  markMessage(node)
-  if(node.getAttribute(msgIdAttribute)) {
-    //just mark the hash as highlighted.
-    state[fieldDate][node.getAttribute(msgIdAttribute)] = true;
-    storeState(state);
+    markMessage(node)
+    if(node.getAttribute(msgIdAttribute)) {
+      //just mark the hash as highlighted.
+      state[fieldDate][node.getAttribute(msgIdAttribute)] = true;
+      storeState(state);
+    }
   }
 }
+
 
 function findParentNodeWithMatcher(node, matcherFunc) {
   if(!matcherFunc(node)) {
@@ -1398,7 +1480,9 @@ function process(mutations) {
 
   //attach double click handler
   allNewMessages.forEach(
-    message => (message.domNode.ondblclick = dblClickHandler)
+    message => {
+      message.domNode.onclick = onClickHandler;
+    }
   );
 
   allNewMessages.forEach(msg =>
@@ -1452,6 +1536,7 @@ if(state[fieldHideTray]) {
 console.log(
   "Script applied. It worked. Feel free to close your Dev Tools. You need to apply the script, whenever you open your Browser or Reload."
 );
+  
   
   
 }
