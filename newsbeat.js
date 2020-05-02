@@ -98,6 +98,7 @@ const fieldTranscriptionContainerOnAirHint = "fieldTranscriptionContainerOnAirHi
 
 const fieldFilter = "fieldFilter"
 const fieldFilterResetButton = "fieldFilterResetButton"
+const fieldFilterHighlights = "fieldFilterHighlights"
 
 const transcriptionContainerId = "field_mark_transcription";
 const transcriptionContainerBodyId = `${transcriptionContainerId}-body`;
@@ -949,7 +950,7 @@ function showBackup() {
   container.setAttribute("class", "chat");
   container.setAttribute("style", "overflow-y: scroll; height:400px")
 
-  const inputTemplate = `<div>Filter: <input type="text" id="backupFilterInput"></div>`;
+  const inputTemplate = `<div><span>Filter: <input type="text" id="backupFilterInput"></span>Highlights <input type="checkbox" id="backupFilterHighlights"><span></span></div>`;
   const filter = document.createElement("div");
   filter.innerHTML = inputTemplate;
   container.appendChild(filter);
@@ -961,6 +962,7 @@ function showBackup() {
 
     if(msg.highlighted) {
       node.setAttribute("style", `background-color:${markerColor};color:${markerTextColor}`);
+      node.setAttribute(xHighlighted, "true");
     }
 
     node.innerHTML = template;
@@ -969,8 +971,8 @@ function showBackup() {
 
   showInModal(container);
   process();
-  document.getElementById("backupFilterInput").addEventListener("keyup", (evt)=>handleBackupFilters(evt.target.value));
-
+  document.getElementById("backupFilterInput").addEventListener("keyup", (evt)=>handleBackupFilters({filter: evt.target.value, highlights: false}));
+  document.getElementById("backupFilterHighlights").addEventListener("change", (evt) => handleBackupFilters({filter: "", highlights: evt.target.checked}))
   state[fieldSilence] = originalSilence;
 }
 
@@ -978,8 +980,9 @@ function handleBackupFilters(filter) {
   const nodes = [].slice.call(
     document.getElementsByClassName("backup-chat-message")
   );
-  
+
   filterMessages(nodes.map(n => parseEntry(n)), filter)
+  
 }
 
 function showQuickTrades() {
@@ -1004,19 +1007,27 @@ function showQuickTrades() {
 
 
 function handleFilterMessages(filter) {
-    const allMessages = findAllMessages(false)
+    const allMessages = findAllMessages(false);
     filterMessages(allMessages,filter);
   }
 
-function filterMessages(messageNodes, filter) {
-  messageNodes.forEach((msg) => {
-      
-    if(filter && filter.length > 0 && !stringmatch(msg.text, filter, 'i') && !stringmatch(msg.name, filter, 'i')) {
-      msg.domNode.style.setProperty("display", "none");
-    } else {
-      msg.domNode.style.removeProperty("display");
-    }
-  });
+function filterMessages(messageNodes, filterValue) {
+
+  if (filterValue.highlights) {
+    //reset all entries
+    messageNodes.forEach((msg) =>  msg.domNode.style.removeProperty("display"));
+    //hide all messages that are not highlighted
+    messageNodes.filter((msg) => !msg.highlighted).forEach(msg => msg.domNode.style.setProperty("display", "none"))
+  } else {
+    messageNodes.forEach((msg) => {
+      const filter = filterValue.filter;
+      if(filter && filter.length > 0 && !stringmatch(msg.text, filter, 'i') && !stringmatch(msg.name, filter, 'i')) {
+        msg.domNode.style.setProperty("display", "none");
+      } else {
+        msg.domNode.style.removeProperty("display");
+      }
+    });
+  }
 }
 
 function prepareSupportAndResistanceWindow() {
@@ -1044,6 +1055,9 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                     <span>
                                                                       Filter Messages by Content or Name: <input type="text" id="${fieldFilter}">
+                                                                    </span>
+                                                                    <span>
+                                                                      Highlights: <input type="checkbox" id="${fieldFilterHighlights}">
                                                                     </span>
                                                                     <span>
                                                                       <input type="button" id="${fieldFilterResetButton}" value="Reset">
@@ -1178,11 +1192,16 @@ prepareModal();
 
 //filter
 document.getElementById(fieldFilter).addEventListener("keyup", (evt) => {
-  handleFilterMessages(evt.target.value);
+  handleFilterMessages({filter: evt.target.value, highlights: false});
+});
+document.getElementById(fieldFilterHighlights).addEventListener("change", (evt) => {
+  document.getElementById(fieldFilter).value = "";
+  handleFilterMessages({highlights: evt.target.checked});
 });
 document.getElementById(fieldFilterResetButton).addEventListener("click", (evt) => {
   document.getElementById(fieldFilter).value = "";
-  handleFilterMessages("");
+  document.getElementById(fieldFilterHighlights).checked = false;
+  handleFilterMessages({filter: ""});
 });
 
 //transcription
