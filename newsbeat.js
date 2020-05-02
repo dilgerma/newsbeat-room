@@ -143,6 +143,7 @@ const collection = {};
 var selectedCollection = ["None"];
 const staticCollections = [];
 const markedMessagesKey = "Marked Messages";
+const xHighlighted = "x-highlighted";
 
 //highlighted messages 
 const today = () => new Date(new Date().getFullYear(),new Date().getMonth() , new Date().getDate());
@@ -413,6 +414,7 @@ const handleLastReadMark = (node) => {
 const markMessage = (node) => {
     const msg = parseEntry(node);
     handleCollection(markedMessagesKey, msg);
+    node.setAttribute(xHighlighted, "true");
     node.setAttribute(
       "style",
       `background-color:${getMarkerColor()};color:${markerTextColor}`
@@ -956,6 +958,11 @@ function showBackup() {
     const template = `<span class="chat-message-timestamp" style="background-color:green;color:white"><!-- react-text: 1048 -->[<!-- /react-text --><!-- react-text: 1049 -->${msg.date}<!-- /react-text --><!-- react-text: 1050 -->]<!-- /react-text --></span><!-- react-text: 1051 --> <!-- /react-text --><span class="chat-message-username">${msg.name}</span><span class="chat-message-username">:</span><!-- react-text: 1054 --> <!-- /react-text --><span class="chat-message-text">${msg.text}</span>`
     const node  = document.createElement("li");
     node.setAttribute("class", "chat-message backup-chat-message");
+
+    if(msg.highlighted) {
+      node.setAttribute("style", `background-color:${markerColor};color:${markerTextColor}`);
+    }
+
     node.innerHTML = template;
     container.appendChild(node);
   });
@@ -1440,6 +1447,7 @@ function parseEntry(chatMessageNode) {
     name: name ? name.trim() : name,
     text: text ? text.trim() : text,
     date: date ? date.trim() : date,
+    highlighted: !!chatMessageNode.getAttribute(xHighlighted),
     processed: !!chatMessageNode.getAttribute("processed"),
     domNode: chatMessageNode,
   };
