@@ -18,7 +18,7 @@ function script() {
  
 
   
- // VERSION 1.9.1
+ // VERSION 1.9.2
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -116,6 +116,7 @@ const fieldTranscriptionContainerOnAirHint = "fieldTranscriptionContainerOnAirHi
 
 const fieldFilter = "fieldFilter"
 const fieldFilterResetButton = "fieldFilterResetButton"
+const fieldFilterHighlights = "fieldFilterHighlights"
 
 const transcriptionContainerId = "field_mark_transcription";
 const transcriptionContainerBodyId = `${transcriptionContainerId}-body`;
@@ -161,6 +162,7 @@ const collection = {};
 var selectedCollection = ["None"];
 const staticCollections = [];
 const markedMessagesKey = "Marked Messages";
+const xHighlighted = "x-highlighted";
 
 //highlighted messages 
 const today = () => new Date(new Date().getFullYear(),new Date().getMonth() , new Date().getDate());
@@ -431,6 +433,7 @@ const handleLastReadMark = (node) => {
 const markMessage = (node) => {
     const msg = parseEntry(node);
     handleCollection(markedMessagesKey, msg);
+    node.setAttribute(xHighlighted, "true");
     node.setAttribute(
       "style",
       `background-color:${getMarkerColor()};color:${markerTextColor}`
@@ -965,7 +968,7 @@ function showBackup() {
   container.setAttribute("class", "chat");
   container.setAttribute("style", "overflow-y: scroll; height:400px")
 
-  const inputTemplate = `<div>Filter: <input type="text" id="backupFilterInput"></div>`;
+  const inputTemplate = `<div><span>Filter: <input type="text" id="backupFilterInput"></span>Highlights <input type="checkbox" id="backupFilterHighlights"><span></span></div>`;
   const filter = document.createElement("div");
   filter.innerHTML = inputTemplate;
   container.appendChild(filter);
@@ -974,14 +977,20 @@ function showBackup() {
     const template = `<span class="chat-message-timestamp" style="background-color:green;color:white"><!-- react-text: 1048 -->[<!-- /react-text --><!-- react-text: 1049 -->${msg.date}<!-- /react-text --><!-- react-text: 1050 -->]<!-- /react-text --></span><!-- react-text: 1051 --> <!-- /react-text --><span class="chat-message-username">${msg.name}</span><span class="chat-message-username">:</span><!-- react-text: 1054 --> <!-- /react-text --><span class="chat-message-text">${msg.text}</span>`
     const node  = document.createElement("li");
     node.setAttribute("class", "chat-message backup-chat-message");
+
+    if(msg.highlighted) {
+      node.setAttribute("style", `background-color:${markerColor};color:${markerTextColor}`);
+      node.setAttribute(xHighlighted, "true");
+    }
+
     node.innerHTML = template;
     container.appendChild(node);
   });
 
   showInModal(container);
   process();
-  document.getElementById("backupFilterInput").addEventListener("keyup", (evt)=>handleBackupFilters(evt.target.value));
-
+  document.getElementById("backupFilterInput").addEventListener("keyup", (evt)=>handleBackupFilters({filter: evt.target.value, highlights: false}));
+  document.getElementById("backupFilterHighlights").addEventListener("change", (evt) => handleBackupFilters({filter: "", highlights: evt.target.checked}))
   state[fieldSilence] = originalSilence;
 }
 
@@ -989,8 +998,9 @@ function handleBackupFilters(filter) {
   const nodes = [].slice.call(
     document.getElementsByClassName("backup-chat-message")
   );
-  
+
   filterMessages(nodes.map(n => parseEntry(n)), filter)
+  
 }
 
 function showQuickTrades() {
@@ -1015,19 +1025,27 @@ function showQuickTrades() {
 
 
 function handleFilterMessages(filter) {
-    const allMessages = findAllMessages(false)
+    const allMessages = findAllMessages(false);
     filterMessages(allMessages,filter);
   }
 
-function filterMessages(messageNodes, filter) {
-  messageNodes.forEach((msg) => {
-      
-    if(filter && filter.length > 0 && !stringmatch(msg.text, filter, 'i') && !stringmatch(msg.name, filter, 'i')) {
-      msg.domNode.style.setProperty("display", "none");
-    } else {
-      msg.domNode.style.removeProperty("display");
-    }
-  });
+function filterMessages(messageNodes, filterValue) {
+
+  if (filterValue.highlights) {
+    //reset all entries
+    messageNodes.forEach((msg) =>  msg.domNode.style.removeProperty("display"));
+    //hide all messages that are not highlighted
+    messageNodes.filter((msg) => !msg.highlighted).forEach(msg => msg.domNode.style.setProperty("display", "none"))
+  } else {
+    messageNodes.forEach((msg) => {
+      const filter = filterValue.filter;
+      if(filter && filter.length > 0 && !stringmatch(msg.text, filter, 'i') && !stringmatch(msg.name, filter, 'i')) {
+        msg.domNode.style.setProperty("display", "none");
+      } else {
+        msg.domNode.style.removeProperty("display");
+      }
+    });
+  }
 }
 
 function prepareSupportAndResistanceWindow() {
@@ -1044,7 +1062,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.9.1 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.9.2 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -1055,6 +1073,9 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                     <span>
                                                                       Filter Messages by Content or Name: <input type="text" id="${fieldFilter}">
+                                                                    </span>
+                                                                    <span>
+                                                                      Highlights: <input type="checkbox" id="${fieldFilterHighlights}">
                                                                     </span>
                                                                     <span>
                                                                       <input type="button" id="${fieldFilterResetButton}" value="Reset">
@@ -1189,11 +1210,16 @@ prepareModal();
 
 //filter
 document.getElementById(fieldFilter).addEventListener("keyup", (evt) => {
-  handleFilterMessages(evt.target.value);
+  handleFilterMessages({filter: evt.target.value, highlights: false});
+});
+document.getElementById(fieldFilterHighlights).addEventListener("change", (evt) => {
+  document.getElementById(fieldFilter).value = "";
+  handleFilterMessages({highlights: evt.target.checked});
 });
 document.getElementById(fieldFilterResetButton).addEventListener("click", (evt) => {
   document.getElementById(fieldFilter).value = "";
-  handleFilterMessages("");
+  document.getElementById(fieldFilterHighlights).checked = false;
+  handleFilterMessages({filter: ""});
 });
 
 //transcription
@@ -1458,6 +1484,7 @@ function parseEntry(chatMessageNode) {
     name: name ? name.trim() : name,
     text: text ? text.trim() : text,
     date: date ? date.trim() : date,
+    highlighted: !!chatMessageNode.getAttribute(xHighlighted),
     processed: !!chatMessageNode.getAttribute("processed"),
     domNode: chatMessageNode,
   };
@@ -1556,8 +1583,6 @@ if(state[fieldHideTray]) {
 console.log(
   "Script applied. It worked. Feel free to close your Dev Tools. You need to apply the script, whenever you open your Browser or Reload."
 );
-  
-  
   
   
 }
