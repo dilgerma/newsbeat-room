@@ -1,6 +1,6 @@
 {
   "name": "NewsBeat Script",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "manifest_version": 2,
   "description": "Simple Script to hightlight stuff in the NewsBeat Room",
   "homepage_url": "https://github.com/dilgerma/newsbeat-room",
