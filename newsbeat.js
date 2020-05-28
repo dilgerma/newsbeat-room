@@ -1,6 +1,6 @@
 
   
- // VERSION 1.9.3
+ // VERSION 1.9.4
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -79,6 +79,7 @@ const fieldTradeLogButton = "fieldTradeLog";
 const fieldShowTradeLogButton = "fieldShowTradelogButton";
 const fieldShowQuickTradesButton = "fieldShowQuickTradesButton";
 const fieldCallQuickTrades = "fieldCallQuickTrades";
+const fieldLiveFilter = "fieldLiveFilter";
 const fieldStopTalking = "fieldStopTalking";
 const fieldIdVolume = "fieldIdVolume";
 const msgIdAttribute = "msg-id-attribute";
@@ -105,6 +106,7 @@ const transcriptionContainerBodyId = `${transcriptionContainerId}-body`;
 
 // x-custom
 const xcustom = "x-custom";
+const xFollowed = "x-followed";
 
 //quicktrades
 const quickTrade = "*** ";
@@ -562,7 +564,8 @@ const readState = () => {
     [fieldDate] : highlightedMessages,
     [fieldCallQuickTrades] : false,
     [fieldIdVolume] : 3,
-    [fieldShowCollections] : fieldShowCollections
+    [fieldShowCollections] : fieldShowCollections,
+    [fieldLiveFilter] : false
   };
 
   if(state[fieldDate] && state[fieldDate].date != today().getTime()) {
@@ -747,6 +750,12 @@ const messageProcessors = [
     name: "parseLastReadMark",
     matcher: (msg) => state[readMarkId] == msgHash(msg),
     handler : (msg) => handleLastReadMark(msg.domNode)
+  },
+  {
+    name : "live filter",
+    matcher : (msg) => true,
+    handler : liveFilter,
+    condition : ()=>!!state[fieldLiveFilter]
   }
 ];
 
@@ -1013,6 +1022,26 @@ function showQuickTrades() {
   showInModal(node);
 }
 
+function liveFilter(msg) {
+  const displayed = msg.domNode.getAttribute(xFollowed) || msg.domNode.getAttribute(xHighlighted)
+    if(!displayed) {
+      msg.domNode.style.setProperty("display", "none");
+    } else {
+      msg.domNode.style.removeProperty("display");
+    }
+}
+
+function handleLiveFilter() {
+  if(!state[fieldLiveFilter]) {
+    return;
+  }
+  const allMessages = findAllMessages(false);
+  allMessages.forEach(msg => {
+    liveFilter(msg);
+  });
+  
+
+}
 
 function handleFilterMessages(filter) {
     const allMessages = findAllMessages(false);
@@ -1052,7 +1081,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.9.3 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.9.4 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -1119,6 +1148,9 @@ function prepareSupportAndResistanceWindow() {
                                                                     </div>
                                                                     <div>
                                                                         Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="upgrade,downgrade,Sweep">
+                                                                    </div>
+                                                                    <div>
+                                                                        <input type="checkbox" id="${fieldLiveFilter}" type="checkbox">Live Filter</input>
                                                                     </div>
                                                                     <hr>
                                                                     <div>
@@ -1270,6 +1302,7 @@ document.getElementById(fieldKeywordsToRead).value = state[fieldKeywordsToRead] 
 ) : "";
 document.getElementById(fieldIdVolume).value = state[fieldIdVolume];
 document.getElementById(fieldShowCollections).checked = state[fieldShowCollections];
+document.getElementById(fieldLiveFilter).checked = state[fieldLiveFilter];
 
 document.getElementById(fieldCollections).value = state[fieldCollections].length > 0 ? state[fieldCollections].reduce(
     (acc, highlighted) => `${acc},${highlighted}`
@@ -1281,6 +1314,15 @@ document.getElementById(fieldHideForm).addEventListener("click", () => {
     .setAttribute("style", "display:none");
 });
 
+document.getElementById(fieldLiveFilter).addEventListener("change", (evt)=>{
+  state[fieldLiveFilter] = evt.target.checked;
+  storeState(state);
+  if(evt.target.checked) {
+    handleLiveFilter();
+  } else {
+    findAllMessages().forEach(msg => msg.domNode.style.removeProperty("display"));
+  }
+});
 
 
 //event listener / basically adjust state
@@ -1563,6 +1605,7 @@ function process(mutations) {
     if (isBeepEnabled()) {
       beepSound.play();
     }
+    msg.domNode.setAttribute(xFollowed, "true");
   });
 
   //highlights
@@ -1593,4 +1636,3 @@ if(!state[fieldShowCollections]) {
 console.log(
   "Script applied. It worked. Feel free to close your Dev Tools. You need to apply the script, whenever you open your Browser or Reload."
 );
-  
