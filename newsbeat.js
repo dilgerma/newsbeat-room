@@ -1,6 +1,5 @@
 
-  
- // VERSION 1.9.4
+ // VERSION 2.0.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
@@ -225,6 +224,7 @@ const prepareTranscriptionContainer = () => {
     "grid-item full-height chat-card-grid-item transcription-container"
   );
 
+
  const headerHtml = `<div style="width: 100%; background-color: rgb(0, 90, 132); white-space: nowrap; display: flex;"><button class="room-tab" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: 0px; padding: 0px; outline: none; font-size: 14px; font-weight: 500; position: relative; color: rgb(255, 255, 255); width: 100%; text-transform: uppercase; background-color: rgba(0, 0, 0, 0.2); text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 5px;"><div><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 48px;"><!-- react-text: 196 -->NewsBeat Script Live Transcription<!-- /react-text --></div></div></button></div>`
  const header = document.createElement("div");
  header.innerHTML=headerHtml;
@@ -237,7 +237,7 @@ const prepareTranscriptionContainer = () => {
   );
 
   const body = document.createElement("div");
-  body.setAttribute("class", "chat-body");
+  //body.setAttribute("class", "chat-body");
 
   bodyWrapper.appendChild(body);
 
@@ -249,7 +249,7 @@ const prepareTranscriptionContainer = () => {
 
   container.appendChild(bodyWrapper);
 
-  document.getElementsByClassName("big-cards")[0].appendChild(container);
+  document.getElementById("presentationContainer").appendChild(container);
 
 }
 
@@ -386,9 +386,11 @@ const msgHash = (msg) => {
 
 const findAllMessages = (filterProcessed) => {
  //all chat messages in the DOM as a simple array.
-  const chatMessageDomNodes = [].slice.call(
-    document.getElementsByClassName("chat-message")
-  );
+  var chatMessageDomNodes = [].slice.call(
+    document.getElementsByClassName("smChatLi")
+  )
+  //remove last element
+  //chatMessageDomNodes = chatMessageDomNodes.slice(chatMessageDomNodes.length)
   //parsed message objects
   return chatMessageDomNodes
     .filter(node => node.getAttribute(xcustom) !== "true" && node.getAttribute("processed") !== `${filterProcessed}`)
@@ -761,7 +763,7 @@ const messageProcessors = [
 
 var mutationObserver = new MutationObserver(process);
 
-mutationObserver.observe(document.getElementsByClassName("chat-body")[0], {
+mutationObserver.observe(document.getElementById("chatContent"), {
   childList: true,
   subtree: true
 });
@@ -884,7 +886,7 @@ const prepareCollectionWindow = (key, msg) => {
   container.appendChild(headline);
   container.appendChild(bodyWrapper);
 
-  document.getElementsByClassName("big-cards")[0].appendChild(container);
+  document.getElementById("presentationHolderDiv").appendChild(container);
 };
 
 function prepareModal() {
@@ -1071,6 +1073,7 @@ function prepareSupportAndResistanceWindow() {
   const formContainer = document.createElement("div");
   formContainer.setAttribute("id", "field_form_container");
   formContainer.setAttribute("class", "grid-item");
+  formContainer.setAttribute("style", "color:black; background-color:white")
 
   const headline = document.createElement("div");
 
@@ -1081,7 +1084,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  1.9.4 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  2.0.0 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -1221,7 +1224,7 @@ function prepareSupportAndResistanceWindow() {
                                                                   </form>`;
 
   document
-    .getElementsByClassName("cards-container")[0]
+    .getElementById("presentationContainer")
     .appendChild(formContainer);
 
   body.innerHTML = template;
@@ -1526,9 +1529,10 @@ function isCallMarksTrades() {
 
 //parse a chat message
 function parseEntry(chatMessageNode) {
-  const name = chatMessageNode.childNodes[4].innerText;
-  const text = chatMessageNode.childNodes[9].innerText;
-  const date = chatMessageNode.childNodes[0].innerText;
+  const name = chatMessageNode.querySelector("strong").innerText
+  const text = chatMessageNode.querySelector(".chat-msg-txt").innerText
+  //new : Thu @ 10:55 am, old 6:15am
+  const date = chatMessageNode.querySelector(".ts").innerText.trim().replace("[", "").replace("]", "").replace(" ", "")
   const msg = {
     name: name ? name.trim() : name,
     text: text ? text.trim() : text,

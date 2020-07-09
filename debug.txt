@@ -65,3 +65,7 @@ monitore// message of followed announcing 1nd
 <! quick trades -->
 <li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->11:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Martin Dilger</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">*** AAPL 125P in</span></li>
 <li class="chat-message" ><span class="chat-message-timestamp"><!-- react-text: 1325 -->[<!-- /react-text --><!-- react-text: 1326 -->10:33pm<!-- /react-text --><!-- react-text: 1327 -->]<!-- /react-text --></span><!-- react-text: 1328 --> <!-- /react-text --><span class="chat-message-username">Mark M</span><span class="chat-message-username">:</span><!-- react-text: 1331 --> <!-- /react-text --><span class="chat-message-text">*** CCL Strandle - very light</span></li>
+
+
+// new vtf
+<li class="clearfix smChatLi" tabindex="2" id="chatLi_2" msg-id-attribute="1976207694" style="background-color:#E8FE23;color:black"><span class="chat-img inline"><a href="" class="text-inverse ts">[10:55 am]</a><img style="margin-right:5px;" class="thumb16 inline" src="https://secure.gravatar.com/avatar/0cde625b90d721f5bc860039b6ccd77d?d=mm"></span><div class="inline"><a href="" class="text-inverse"><strong>Paavo</strong></a><div class="chat-msg chat-msg-txt inline smChatBody">Mark-V</div></div></li>
