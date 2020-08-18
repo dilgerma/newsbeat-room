@@ -2,19 +2,19 @@
  // VERSION 2.0.0
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
-PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO 
+PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO
 CHARITY. CHILD CANCER PREFERRED - EVERY $ HELPS.
-                                                                    
+
 This script might evolve, feel free to check here and there for new versions at
 https://raw.githubusercontent.com/dilgerma/newsbeat-room/master/newsbeat.js
 
 Older versions can be found here:
 https://github.com/dilgerma/newsbeat-room/releases
-                                                                    
+
 authored by Martin Dilger
-                                                                    
+
 Happy Trading make money.
-                                                                    
+
 MIT License
 
 Copyright (c) 2020 Martin Dilger
@@ -154,7 +154,7 @@ const markedMessagesKey = "Marked Messages";
 const xHighlighted = "x-highlighted";
 
 
-//highlighted messages 
+//highlighted messages
 const today = () => new Date(new Date().getFullYear(),new Date().getMonth() , new Date().getDate());
 
 //read mark
@@ -184,10 +184,10 @@ const hideTray = function() {
   }
 };
 
-function speak(msg) { 
+function speak(msg) {
   if(SpeechSynthesisUtterance) {
-      speakText(`${msg.name} says`); 
-      speakText(msg.text); 
+      speakText(`${msg.name} says`);
+      speakText(msg.text);
   }
 }
 
@@ -213,9 +213,9 @@ function initializeSpeechRecognition() {
 
 /*
 Transcription
-*/ 
+*/
 const prepareTranscriptionContainer = () => {
- 
+
   const container = document.createElement("div");
   container.setAttribute("id", transcriptionContainerId);
   container.style.setProperty("display", "none");
@@ -229,7 +229,7 @@ const prepareTranscriptionContainer = () => {
  const header = document.createElement("div");
  header.innerHTML=headerHtml;
  container.appendChild(header);
-    
+
   const bodyWrapper = document.createElement("div");
   bodyWrapper.setAttribute(
     "class",
@@ -255,16 +255,16 @@ const prepareTranscriptionContainer = () => {
 
 
 function transcribe() {
-  
+
   if(!speechRecognition) {
     speechRecognition = initializeSpeechRecognition();
     if(!speechRecognition) {
       console.log("speechRecognition is not available");
     }
   }
-  speechRecognition.onstart = function() { 
+  speechRecognition.onstart = function() {
  }
-  
+
   speechRecognition.onspeechend = function(evt) {
   }
 
@@ -282,17 +282,17 @@ function transcribe() {
 
   speechRecognition.onerror = function(event) {
     if(event.error == 'no-speech') {
-      console.log('No speech was detected. Try again.');  
+      console.log('No speech was detected. Try again.');
     };
   }
-  
+
   speechRecognition.onresult = function(event) {
-  
+
     // event is a SpeechRecognitionEvent object.
-    // It holds all the lines we have captured so far. 
+    // It holds all the lines we have captured so far.
     // We only need the current one.
     var current = event.resultIndex;
-  
+
     // Get a transcript of what was said.
     var transcript = event.results[current][0].transcript;
     const today = new Date();
@@ -306,13 +306,13 @@ function transcribe() {
     };
     msg.hash = msgHash(msg);
   //  transcriptions.push(msg);
-    
+
       const template = `<span class="chat-message-timestamp"<!-- react-text: 1048 --><!-- /react-text --><!-- react-text: 1049 -->${msg.date}<!-- /react-text --><!-- react-text: 1050 --><!-- /react-text --></span><!-- react-text: 1051 --> <!-- /react-text --><span class="chat-message-username">${msg.name}</span><span class="chat-message-username">:</span><!-- react-text: 1054 --> <!-- /react-text --><span class="chat-message-text">${msg.text}</span>`
       const node  = document.createElement("li");
       node.setAttribute("class", "transcribe-message");
       node.innerHTML = template;
       document.getElementById(transcriptionContainerBodyId).appendChild(node);
-  
+
     // Add the current transcript to the contents of our Note.
   }
 
@@ -343,7 +343,7 @@ const createRadioElement = (name, checked, value, displayString) => {
   var radioFragment = document.createElement("div");
   radioFragment.innerHTML = radioHtml;
 
-  return radioFragment.firstChild;        
+  return radioFragment.firstChild;
 };
 
 const removeAllElementsInNode = node => {
@@ -367,12 +367,12 @@ const calloutStrategy = (msg) => {
   const matchingStrategy = strategyArr.find(strategy => strategy.matcher.some(str => stringmatch(msg.text, str, "i")));
   if (matchingStrategy) {
     speakText(matchingStrategy.sound)
-  } 
+  }
 }
 
 const msgHash = (msg) => {
   const str = `${msg.name}-${msg.date}-${msg.text.substr(0,10)}`
-  
+
   var hash = 0, i, chr, len;
   if (str.length === 0) return hash;
   for (i = 0, len = str.length; i < len; i++) {
@@ -418,7 +418,7 @@ const handleLastReadMark = (node) => {
 
     storeState(state);
   }
-  
+
 
 }
 
@@ -484,7 +484,7 @@ const processSupportResistance = (msg) => {
     const messages = [];
     //messaeg without multiple spaces
     const parsedMessage = msg.text.replace(/\s\s+/g, ' ');
-      
+
     let table = "<table>"
     table += "<tr><th>Symbol</th><th>Support</th><th>Resistance</th></tr>"
     symbols.forEach(symbol => {
@@ -497,7 +497,7 @@ const processSupportResistance = (msg) => {
 
     table + "</table>"
 
-    
+
     //prepare window
     const node = document.getElementById(containerBodyId);
     if(node == null) {
@@ -542,7 +542,7 @@ const isEntryReadable = (msg) => {
   return !patternsToNotRead.some(pattern => msg.text.startsWith(pattern))
 }
 
-//state 
+//state
 const readState = () => {
 
   const state = localStorage && localStorage[localStorageKey] ? JSON.parse(localStorage[localStorageKey]) : {
@@ -662,7 +662,7 @@ const allValidStrategyStrings = strategyArr.reduce(
  * here the action happens.
  * each message goes through the callouts list.
  * each callout has:
- * 
+ *
  * a matcher - indicating if it can process the message
  * a handler - what to do it it can process the message
  * a condition - check if enabled or not
@@ -676,7 +676,7 @@ const messageProcessors = [
   },
   {
     name: "callout strategies of followed people",
-    matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")) && getFollowedPeople().some(name => msg.name == name),
+    matcher: msg => allValidStrategyStrings.some(st => stringmatch(msg.text, st, "i")) && getFollowedPeople().some(name => msg.name.toLowerCase() == name.toLowerCase()),
     handler: msg => calloutStrategy(msg),
     condition: ()=> !firstRun &&  isCalloutStrategies() && !isCallOutStrategiesOfEverybody() && !firstRun && !isReadAllEntries()
   },
@@ -712,7 +712,7 @@ const messageProcessors = [
     matcher : msg => isEntryReadable(msg) && getFollowedPeople().some(name => name == msg.name),
     handler: msg => speak(msg),
     condition: () => isSpeakHighlightsEnabled() && !isReadAllEntries() && getReadKeywords().length == 0 && !firstRun
-   
+
   },
   {
     name: "read highlights or specific names",
@@ -938,11 +938,11 @@ function handleBackup() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
 }
 
 function restoreBackup(evt) {
-  var files = evt.target.files; 
+  var files = evt.target.files;
   var reader = new FileReader();
 
   reader.onload = ((file)=> {
@@ -975,9 +975,12 @@ function showBackup() {
   container.appendChild(filter);
 
   backupMessages.forEach(msg => {
-    const template = `<span class="chat-message-timestamp" style="background-color:green;color:white"><!-- react-text: 1048 -->[<!-- /react-text --><!-- react-text: 1049 -->${msg.date}<!-- /react-text --><!-- react-text: 1050 -->]<!-- /react-text --></span><!-- react-text: 1051 --> <!-- /react-text --><span class="chat-message-username">${msg.name}</span><span class="chat-message-username">:</span><!-- react-text: 1054 --> <!-- /react-text --><span class="chat-message-text">${msg.text}</span>`
+    //const template = `<span class="chat-message-timestamp" style="background-color:green;color:white"><!-- react-text: 1048 -->[<!-- /react-text --><!-- react-text: 1049 -->${msg.date}<!-- /react-text --><!-- react-text: 1050 -->]<!-- /react-text --></span><!-- react-text: 1051 --> <!-- /react-text --><span class="chat-message-username"></span><span class="chat-message-username">:</span><!-- react-text: 1054 --> <!-- /react-text --><span class="chat-message-text">${msg.text}</span>`
+
+    const template = `<span class="chat-img inline"><a href="" class="text-inverse ts">${msg.date}</a></span><div class="inline"><a href="" class="text-inverse"><strong>${msg.name}</strong></a><div class="chat-msg chat-msg-txt inline smChatBody">${msg.text}</div></div>`
+
     const node  = document.createElement("li");
-    node.setAttribute("class", "chat-message backup-chat-message");
+    node.setAttribute("class", "chat-message backup-chat-message clearfix smChatLi");
 
     if(msg.highlighted) {
       node.setAttribute("style", `background-color:${markerColor};color:${markerTextColor}`);
@@ -1001,7 +1004,7 @@ function handleBackupFilters(filter) {
   );
 
   filterMessages(nodes.map(n => parseEntry(n)), filter)
-  
+
 }
 
 function showQuickTrades() {
@@ -1041,7 +1044,7 @@ function handleLiveFilter() {
   allMessages.forEach(msg => {
     liveFilter(msg);
   });
-  
+
 
 }
 
@@ -1348,7 +1351,7 @@ document.getElementById(fieldFollowedPeopleInputId).addEventListener("change", (
   const stateValue = content.length > 0 ? content.split(",").filter(elem => elem.length > 0).map(elem => elem.trim()) : []
   state[fieldFollowedPeopleInputId]=stateValue;
   storeState(state);
-  
+
 });
 document.getElementById(fieldHighlightInputId).addEventListener("change", (evt)=>{
   const content = evt.target.value;
@@ -1529,7 +1532,7 @@ function isCallMarksTrades() {
 
 //parse a chat message
 function parseEntry(chatMessageNode) {
-  const name = chatMessageNode.querySelector("strong").innerText
+  const name = chatMessageNode.querySelector("strong").firstChild.textContent
   const text = chatMessageNode.querySelector(".chat-msg-txt").innerText
   //new : Thu @ 10:55 am, old 6:15am
   const date = chatMessageNode.querySelector(".ts").innerText.trim().replace("[", "").replace("]", "").replace(" ", "")
@@ -1550,7 +1553,7 @@ function onClickHandler(evt) {
   if(evt.detail === 3) {
     const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
     handleLastReadMark(node);
-  } else if(evt.detail == 2){
+  } else if(evt.detail == 1){
     //mark message
     const node = findParentNodeWithMatcher(evt.target, (node) => node.getAttribute(msgIdAttribute) !== null);
 

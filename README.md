@@ -23,7 +23,7 @@ SOFTWARE.
 No Warranty. NEITHER PARTY MAKES ANY WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, BY FACT OR LAW, OTHER THAN THOSE EXPRESSLY SET FORTH IN THIS AGREEMENT. PATHEON MAKES NO WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE OR WARRANTY OF MERCHANTABILITY FOR THE PRODUCTS.
 Use this script at your own Risk please.
 
-This script provides just some convenience to the NewsBeat Chat Room. 
+This script provides just some convenience to the NewsBeat Chat Room.
 It will *never* change or hide any Content.
 Only styling, highlighting and better readability.
 
@@ -32,7 +32,7 @@ Feel free to modify and adjust at your own liking.
 ## Chrome Extension
 
 How to apply the extension: https://youtu.be/Z-Clnsj1tA06
-6
+
 Just load this file: [ext.zip](https://github.com/dilgerma/newsbeat-room/raw/master/ext.zip)
 Unzip it and apply the script like in the video below.
 
@@ -40,7 +40,7 @@ Unzip it and apply the script like in the video below.
 
 Just apply it if you are a member of the NewsBeat Room.
 
-This script provides some useful features for the NewsBeat Live Room. 
+This script provides some useful features for the NewsBeat Live Room.
 
 Information can be found here:
 https://github.com/dilgerma/newsbeat-room
