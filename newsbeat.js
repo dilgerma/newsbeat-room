@@ -65,7 +65,6 @@ const fieldFollowerColor = "field_follower_color";
 const fieldHightlightColor = "field_highlight_color";
 const fieldStrategyColor = "field_strategy_color";
 const fieldMarkerColor = "field_marker_color";
-const fieldHideTray = "field_hide_tray";
 const fieldHideForm = "field_hide_form";
 const fieldCallMarksTrades = "field_marks_trades";
 const fieldCollections = "field_collections";
@@ -108,7 +107,7 @@ const xcustom = "x-custom";
 const xFollowed = "x-followed";
 
 //quicktrades
-const quickTrade = "*** ";
+const quickTrade = "### ";
 const quickTradeLogModalDialog = "quick-tradelog-modal";
 const quickTrades = [];
 
@@ -523,7 +522,7 @@ const processSupportResistance = (msg) => {
 
 const handleQuickTrade = (msg) => {
   quickTrades.push({
-    text: msg.text.replace("*** ", ""),
+    text: msg.text.replace(`${quickTrade}`, ""),
     date: msg.date,
     name: msg.name
   });
@@ -532,7 +531,7 @@ const handleQuickTrade = (msg) => {
 
   if(isCallOutQuickTrades()) {
     if(!state[fieldPlayOnlyOfFollowed] || getFollowedPeople().indexOf(msg.name) !== -1) {
-      speakText(`${msg.name} took a trade`);
+      speakText(`${msg.name} posted an idea`);
     }
   }
 }
@@ -562,7 +561,6 @@ const readState = () => {
     [fieldSpeakHighlights] : false,
     [fieldReadAllEntries]: false,
     [fieldKeywordsToRead]: [],
-    [fieldHideTray] : false,
     [fieldDate] : highlightedMessages,
     [fieldCallQuickTrades] : false,
     [fieldIdVolume] : 3,
@@ -745,7 +743,7 @@ const messageProcessors = [
   },
   {
     name: "quicktrades",
-    matcher: (msg) => msg.text.startsWith(quickTrade),
+    matcher: (msg) => msg.text.trim().startsWith(quickTrade),
     handler : (msg) => handleQuickTrade(msg),
   },
   {
@@ -892,10 +890,10 @@ const prepareCollectionWindow = (key, msg) => {
 function prepareModal() {
   //Buy AAPL 3/13 280 Call KYL21 5m
 
- const modal = `<div id="${modalDialogId}" class="modal" style="display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);">
+ const modal = `<div id="${modalDialogId}" class="modal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);">
 
   <!-- Modal content -->
-  <div style="background-color: #fefefe;  margin: 15% auto;   padding: 20px;  border: 1px solid #888;  width: 80%;">
+  <div style="background-color: #fefefe;  margin: 15% auto;   padding: 20px;  border: 1px solid #888;  width: 80%; height: 50%; overflow-y:scroll">
     <span id="${modalDialogCloseButton}">&times;</span>
     <p id="${modalContentId}"></p>
   </div>
@@ -1015,9 +1013,9 @@ function showQuickTrades() {
   table += "<tr><th style='text-align:left'>Name</th><th style='text-align:left'>Date</th><th>Trade</th></tr>"
   quickTrades.filter(msg => !state[fieldPlayOnlyOfFollowed] || getFollowedPeople().indexOf(msg.name) !== - 1).forEach(msg => {
     table += `<tr>
-                <td style="text-align:left">${msg.date}</td>
-                <td style="text-align:left">${msg.name}</td>  
-                <td style="text-align:left">${msg.text}</td>  
+                <td style="text-align:left"><div style="padding:5px">${msg.date}</div></td>
+                <td style="text-align:left"><div style="padding:5px">${msg.name}</div></td>  
+                <td style="text-align:left"><div style="padding:5px">${msg.text}</div></td>  
               </tr>
              `
   });
@@ -1097,20 +1095,31 @@ function prepareSupportAndResistanceWindow() {
                                                                     <form>
                                                                     <div>
                                                                     <span>
-                                                                      Filter Messages by Content or Name: <input type="text" id="${fieldFilter}">
+                                                                      <button id="${fieldReset}" type="button">Reset Settings</button>
                                                                     </span>
                                                                     <span>
-                                                                      Highlights: <input type="checkbox" id="${fieldFilterHighlights}">
+                                                                      <button id="${fieldStopTalking}" type="button">Stop talking</button>
                                                                     </span>
+                                                                    <span>
+                                                                      Silence <input id="${fieldSilence}" type="checkbox">
+                                                                    </span>
+                                                                    </div>
+                                                                    <hr>
+                                                                    <div>
+                                                                    <span>
+                                                                      Filter Messages by Content or Name: <input type="text" id="${fieldFilter}">
+                                                                    </span><br/>
+                                                                    <span>
+                                                                      Show only marked messages: <input type="checkbox" id="${fieldFilterHighlights}">
+                                                                    </span>
+                                                                    <div>&#9432; You can mark any message by just clicking it.</div>
                                                                     <span>
                                                                       <input type="button" id="${fieldFilterResetButton}" value="Reset">
                                                                     </span>
                                                                     <div>
-                                                                    <div>&#9432; Put in a Keyword or a Name you are interested in.</div>
                                                                     </div>
                                                                     </div>
-                                                                    <hr>
-                                                                    <div>
+                                                                    <div style="display:none">
                                                                     <span>
                                                                       <input type="checkbox" id="${fieldShowTranscription}">Show Transcription
                                                                     </span>
@@ -1126,29 +1135,15 @@ function prepareSupportAndResistanceWindow() {
                                                                   </div>
                                                                   <hr>
                                                                     <div>
-                                                                    <span>
-                                                                      <button id="${fieldReset}" type="button">Reset Settings</button>
-                                                                    </span>
-                                                                    <span>
-                                                                      <button id="${fieldStopTalking}" type="button">Stop talking</button>
-                                                                    </span>
-                                                                    <span>
-                                                                      Silence <input id="${fieldSilence}" type="checkbox">
-                                                                    </span>
-                                                                    <span>
-                                                                      Hide Tray <input id="${fieldHideTray}" type="checkbox">
-                                                                    </span>
-                                                                    </div>
-                                                                    <hr>
+                                                                    <button id="${fieldShowQuickTradesButton}" type="button">Show Trade Ideas</button>
+                                                                    <div>&#9432; To share a trade idea just enter "### " before your message.</div>
                                                                     <div>
-                                                                    <button id="${fieldShowQuickTradesButton}" type="button">Show Quick Trades</button>
-                                                                    <div>&#9432; To share a quick trade just enter "*** " before the trade.</div>
-                                                                    <div>
-                                                                      <input type="checkbox" id="${fieldCallQuickTrades}" type="checkbox">Call Quick Trades</input>
+                                                                      <input type="checkbox" id="${fieldCallQuickTrades}" type="checkbox">Call Trade Ideas</input>
                                                                     </div>
                                                                     </div>
                                                                   
                                                                     <hr>
+                                                                    <div>&#9432; Put in a Keyword or a Name you are interested in.</div>
                                                                     <div>
                                                                         People following: <input style="width:100%" id="field_follow" type="text" placeholder="example: Cathie,Amy Harry,Gary Lundy,Cindy Morgan">
                                                                     </div>
@@ -1158,7 +1153,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                         <input type="checkbox" id="${fieldLiveFilter}" type="checkbox">Live Filter</input>
                                                                     </div>
-                                                                    <hr>
+                                                                    <div style="display:none">
                                                                     <div>
                                                                       <span>Display Collections <input type="checkbox" id="${fieldShowCollections}" type="checkbox"></input></span>
                                                                     </div>
@@ -1168,6 +1163,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div id="${collectionFormFieldContainer}">
                                                                       Which Collection to display?
                                                                       <div id="${collectionFormField}"></div>
+                                                                    </div>
                                                                     </div>
                                                                     <hr>
                                                                     <div>
@@ -1192,7 +1188,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     Voice Volume: <input id="${fieldIdVolume}" type="number" min=0 max=10>
                                                                     </div>
                                                                     <div>
-                                                                      Keywords or People to read (only these will be read) <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords or Names to exclusively read - like TSLA,resistance,support">
+                                                                      Keywords or People to read (if you put anything in here, only these will be read) <input style="width:100%" id="${fieldKeywordsToRead}" type="text" placeholder="Keywords or Names to exclusively read - like TSLA,resistance,support">
                                                                     </div>
                                                                     <hr>
                                                                     <div>
@@ -1298,7 +1294,6 @@ document.getElementById(fieldPlayBeep).checked = state[fieldPlayBeep];
 document.getElementById(fieldCallStrategies).checked = state[fieldCallStrategies];
 document.getElementById(fieldPlayOnlyOfFollowed).checked = state[fieldPlayOnlyOfFollowed];
 document.getElementById(fieldSilence).checked = state[fieldSilence];
-document.getElementById(fieldHideTray).checked = state[fieldHideTray];
 document.getElementById(fieldCallMarksTrades).checked = state[fieldCallMarksTrades]
 document.getElementById(fieldSpeakHighlights).checked = state[fieldSpeakHighlights]
 document.getElementById(fieldReadAllEntries).checked = state[fieldReadAllEntries]
@@ -1372,13 +1367,7 @@ document.getElementById(fieldPlayOnlyOfFollowed).addEventListener("change", (evt
   state[fieldPlayOnlyOfFollowed] = evt.target.checked;
   storeState(state);
 });
-document.getElementById(fieldHideTray).addEventListener("change", (evt)=>{
-  state[fieldHideTray] = evt.target.checked;
-  storeState(state);
-  if(evt.target.checked) {
-    hideTray();
-  }
-});
+
 
 document.getElementById(fieldPlayBeep).addEventListener("change", (evt)=>{
   state[fieldPlayBeep] = evt.target.checked;
@@ -1634,9 +1623,7 @@ function process(mutations) {
 }
 
 process();
-if(state[fieldHideTray]) {
-  hideTray();
-}
+
 if(!state[fieldShowCollections]) {
   document.getElementById(collectionFormFieldContainer).style.setProperty("display", "none");
 }
