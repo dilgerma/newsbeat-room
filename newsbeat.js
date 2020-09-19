@@ -1,5 +1,5 @@
 
- // VERSION 2.0.0
+ // VERSION 2.0.1
 /*
 IF YOU ARE USING THIS SCRIPT AND MAKING MONEY WITH IT.
 PLEASE CONSIDER GIVING SOMETHING BACK - I KINDLY ASK YOU TO DONATE 5 or 10$ TO
@@ -1074,7 +1074,7 @@ function prepareSupportAndResistanceWindow() {
   const formContainer = document.createElement("div");
   formContainer.setAttribute("id", "field_form_container");
   formContainer.setAttribute("class", "grid-item");
-  formContainer.setAttribute("style", "color:black; background-color:white")
+  formContainer.setAttribute("style", "color:black; background-color:white; display:none")
 
   const headline = document.createElement("div");
 
@@ -1085,7 +1085,7 @@ function prepareSupportAndResistanceWindow() {
 
   const headerTemplateString = `
     <div class="inplay-presenter-header" style="padding: 16px; font-weight: bold; box-sizing: border-box; position: relative; white-space: nowrap; height: 48px; color: rgb(0, 90, 132); background-color: rgb(222, 222, 222);"><div style="display: inline-block; vertical-align: top; white-space: normal; padding-right: 90px;"><span style="color: rgb(0, 0, 0); display: block; font-size: 15px">
-    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  2.0.0 (unofficial)</span>
+    <a href="https://github.com/dilgerma/newsbeat-room" target="_blank">NewsBeat Script</a>  2.0.1 (unofficial)</span>
     <span style="color: rgba(0, 0, 0, 0.54); display: block; font-size: 14px;"></span>
     </div>
     <button id="${fieldHideForm}" tabindex="0" type="button" style="border: 10px; box-sizing: border-box; display: inline-block; font-family: Roboto, sans-serif; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); cursor: pointer; text-decoration: none; margin: auto; padding: 12px; outline: none; font-size: 0px; font-weight: inherit; position: absolute; overflow: visible; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; width: 48px; height: 48px; top: 0px; bottom: 0px; right: 4px; background: none;"><div><svg viewBox="0 0 24 24" style="display: inline-block; color: rgb(0, 0, 0); fill: currentcolor; height: 24px; width: 24px; user-select: none; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;"><path d="M7.41 7.84L12 12.42l4.59-4.58L18 9.25l-6 6-6-6z"></path></svg></div></button></div>`;
@@ -1093,6 +1093,7 @@ function prepareSupportAndResistanceWindow() {
 
   const template = `
                                                                     <form>
+                                                                    <div>&#9432; This is an unofficial extension and the T3 Tech Support can not help you with it. If anything does not work, feel free to just uninstall it at any time again.</div>
                                                                     <div>
                                                                     <span>
                                                                       <button id="${fieldReset}" type="button">Reset Settings</button>
@@ -1150,7 +1151,7 @@ function prepareSupportAndResistanceWindow() {
                                                                     <div>
                                                                         Highlights <input style="width:100%" id="field_highlight" type="text" placeholder="upgrade,downgrade,Sweep">
                                                                     </div>
-                                                                    <div>
+                                                                    <div style="display:none">
                                                                         <input type="checkbox" id="${fieldLiveFilter}" type="checkbox">Live Filter</input>
                                                                     </div>
                                                                     <div style="display:none">
@@ -1225,6 +1226,19 @@ function prepareSupportAndResistanceWindow() {
   document
     .getElementById("presentationContainer")
     .appendChild(formContainer);
+
+    //prepare navigation
+    const ul = document.getElementById("topNav").querySelector("ul");
+    const navItem = document.createElement("li");
+    const navLink = document.createElement("a");
+    navLink.innerHTML = "<span>NBScript</span>"
+
+    navItem.appendChild(navLink);
+    ul.appendChild(navItem);
+
+    navLink.onclick = ()=>{
+      showInModal(formContainer)
+    }
 
   body.innerHTML = template;
   return formContainer;
@@ -1565,61 +1579,64 @@ function findParentNodeWithMatcher(node, matcherFunc) {
 
 
 function process(mutations) {
+  try {
 
-  const messages = findAllMessages(true);
+    const messages = findAllMessages(true);
 
-  const allNewMessages = messages.filter(message => !message.processed);
+    const allNewMessages = messages.filter(message => !message.processed);
 
-  //attach double click handler
-  allNewMessages.forEach(
-    message => {
-      message.domNode.onclick = onClickHandler;
-    }
-  );
-
-  allNewMessages.forEach(msg =>
-    messageProcessors
-      .filter(
-        callout =>
-          (callout.condition ? callout.condition() : true) &&
-          callout.matcher(msg)
-      )
-      .forEach(callout => callout.handler(msg))
-  );
-
-  //find all elements with observed people
-  const allNewMessagesOfFollowedPeople = allNewMessages.filter(
-    msg => getFollowedPeople().indexOf(msg.name) !== -1
-  );
-
-  // all messages get a hightlight
-  allNewMessagesOfFollowedPeople.forEach(msg => {
-    msg.domNode.setAttribute(
-      "style",
-      `background-color:${getFollowerColor()};color:${followTextColor}`
+    //attach double click handler
+    allNewMessages.forEach(
+      message => {
+        message.domNode.onclick = onClickHandler;
+      }
     );
-    if (isBeepEnabled()) {
-      beepSound.play();
-    }
-    msg.domNode.setAttribute(xFollowed, "true");
-  });
 
-  //highlights
-  allNewMessages
-    .filter(msg =>
-      getHighlights().some(keyword => new RegExp(keyword, "i").test(msg.text))
-    )
-    .forEach(messageToHighlight => {
-      //
-      messageToHighlight.domNode.setAttribute(
+    allNewMessages.forEach(msg =>
+      messageProcessors
+        .filter(
+          callout =>
+            (callout.condition ? callout.condition() : true) &&
+            callout.matcher(msg)
+        )
+        .forEach(callout => callout.handler(msg))
+    );
+
+    //find all elements with observed people
+    const allNewMessagesOfFollowedPeople = allNewMessages.filter(
+      msg => getFollowedPeople().indexOf(msg.name) !== -1
+    );
+
+    // all messages get a hightlight
+    allNewMessagesOfFollowedPeople.forEach(msg => {
+      msg.domNode.setAttribute(
         "style",
-        `background-color:${getHighlightColor()};color:${highlightTextColor} !important`
+        `background-color:${getFollowerColor()};color:${followTextColor}`
       );
+      if (isBeepEnabled()) {
+        beepSound.play();
+      }
+      msg.domNode.setAttribute(xFollowed, "true");
     });
 
-  //mark messages as processed
-  allNewMessages.forEach(msg => msg.domNode.setAttribute("processed", true));
-  firstRun = false;
+    //highlights
+    allNewMessages
+      .filter(msg =>
+        getHighlights().some(keyword => new RegExp(keyword, "i").test(msg.text))
+      )
+      .forEach(messageToHighlight => {
+        messageToHighlight.domNode.setAttribute(
+          "style",
+          `background-color:${getHighlightColor()};color:${highlightTextColor} !important`
+        );
+      });
+
+    //mark messages as processed
+    allNewMessages.forEach(msg => msg.domNode.setAttribute("processed", true));
+    firstRun = false;
+  }catch(e) {
+    console.log(e);
+  }
 }
 
 process();
